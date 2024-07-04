@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[tool.poetry]
+name = "timetable"
+version = "0.0.1"
+description = "Package description"
+authors = ["Lazar <lazar.kracunovic92@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <4.0"
+requests = ">2.26.0"
+pandas = ">=2.0.0"
+numpy = "^1.0"
+scikit-learn = "^0.24"
+ortools = "^9.10"
+
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.4"
+
+[tool.setuptools]
+packages = ["timetable"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
