@@ -24,7 +24,6 @@ class TestJson(unittest.TestCase):
 
         course = self.course1
         json_course = course.to_json()
-        print(json_course)
         course2 = Course.from_json(json_course)
         self.assertTrue(course2 == course, "Course Json")
 
@@ -41,8 +40,6 @@ class TestJson(unittest.TestCase):
         teacher = self.teacher1
         json_teacher = teacher.to_json()
         teacher2 = Teacher.from_json(json_teacher)
-        print(json_teacher)
-        print(teacher2)
         self.assertTrue(teacher == teacher2, "Teacher Json")
 
     def test_student_json(self):
@@ -55,7 +52,6 @@ class TestJson(unittest.TestCase):
     def test_room_json(self):
 
         room = self.room1
-        print(room)
         json_room = room.to_json()
         room2 = Room.from_json(json_room)
         

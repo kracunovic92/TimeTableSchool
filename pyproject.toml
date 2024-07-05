@@ -6,17 +6,16 @@ build-backend = "setuptools.build_meta"
 name = "timetable"
 version = "0.0.1"
 description = "Package description"
-authors = ["Lazar <lazar.kracunovic92@gmail.com>"]
+authors = ["Lazar"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.8, <4.0"
-requests = ">2.26.0"
-pandas = ">=2.0.0"
+python = "^3.8"
+requests = "^2.26.0"
+pandas = "^2.0.0"
 numpy = "^1.0"
-scikit-learn = "^0.24"
 ortools = "^9.10"
-
+python-dotenv = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"

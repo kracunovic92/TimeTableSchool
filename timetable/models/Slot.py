@@ -32,6 +32,8 @@ class Slot:
     def from_json(data):
         return Slot.from_dict(json.loads(data))
 
+    def __repr__(self):
+        return f"{self.day}:{self.start_time}:{self.end_time}"
     def __str__(self):
         
         return f"{self.day}:{self.start_time}:{self.end_time}"
@@ -74,9 +76,7 @@ class Slot:
     def has_duplicates(slot_list):
 
         seen = set()
-        print("-----")
         for slot in slot_list:
-            print(f'{slot}')
             if slot in seen:
                 return True
             seen.add(slot)

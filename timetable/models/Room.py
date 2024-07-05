@@ -19,9 +19,13 @@ class Room:
             return True
         return False
 
+    def __repr__(self) -> str:
+        return f"{self.id}"
     def __str__(self) -> str:
         return f"{self.id}"
 
+    def __hash__(self) -> int:
+        return hash(self.id)
     def to_dict(self):
         return {
             "id": self.id,
@@ -30,7 +34,8 @@ class Room:
 
     @classmethod
     def from_dict(cls, data):
-        slots = [Slot.from_dict(slot_data) for slot_data in data['slots']]
+
+        slots = [Slot.from_dict(slot_data) for slot_data in data["slots"]]
         return cls(data['id'], slots)
     
     def to_json(self):

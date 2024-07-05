@@ -40,7 +40,6 @@ class Course:
         from .Student import Student
         from .Teacher import Teacher
         from .Slot import Slot
-        print(data['students'])
         students = [Student.from_dict(student_data) for student_data in data['students']] if data['students'] else None
         teacher = Teacher.from_dict(data['teacher']) if data.get('teacher') else None
 

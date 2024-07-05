@@ -41,16 +41,13 @@ class TestSlot(unittest.TestCase):
     def test_remove_duplicates(self):
          
         list_without_duplicates = Slot.remove_duplicates(self.slot_list_without_duplicate)
-        print(list_without_duplicates)
         self.assertTrue(len(list_without_duplicates) ==2, "Remove duplicates Fail")
 
     def test_json(self):
          
         slot = Slot("monday",12,13)
         json_slot = slot.to_json()
-
         slot2 = Slot.from_json(json_slot)
-
         self.assertTrue(slot == slot2, "Slot json")
 
             
