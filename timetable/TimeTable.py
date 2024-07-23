@@ -1,6 +1,5 @@
 
 from ortools.sat.python import cp_model
-from models import Slot
 
 class TimeTable:
 
@@ -29,7 +28,7 @@ class TimeTable:
         student_var_map = {}
         teacher_var_map = {}
 
-        # Variables: Add courses to rooms for room's slots:
+        #  Group courses, rooms, slots:
         for course in courses:
             for room in rooms:
                 for slot in room.slots:
@@ -37,7 +36,7 @@ class TimeTable:
                         f'{course}_{room}_{slot}'
                     )
 
-        # Variables: Add teachers to courses for teacher's slots:
+        # Group teachers, courses, slots:
         for teacher in teachers:
             for course in teacher.courses:
                 for slot in teacher.slots:
@@ -45,8 +44,8 @@ class TimeTable:
                         f'{teacher}_{course}_{slot}'
                     )
 
-        # Variables: Add students to courses:
-        for student in self.students:
+        # Group students, courses and slots:
+        for student in students:
             for course in student.courses:
                     for slot in student.slots:
                         student_var_map[(student,course,slot)] = model.NewBoolVar(
@@ -157,9 +156,16 @@ class TimeTable:
         teacher_variables = self.teacher_var_map
         courses_variables = self.course_var_map
         #print(self.course_var_map)
+        for c in courses_variables:
+            print(c)
+        for t in teacher_variables:
+            print(t)
+        for s in student_variables:
+            print(s)
         # Create the solver and solve
         solver = cp_model.CpSolver()
         status = solver.Solve(model)
+        self.status = status
         self.solver = solver
         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
             print('Solution:')
@@ -187,7 +193,6 @@ class TimeTable:
 
             if solver.value(variable) == 1:
                 course = var[0]
-                room = var[1]
                 slot = var[2]
                 print(str(course) + "  " + str(slot))
 
