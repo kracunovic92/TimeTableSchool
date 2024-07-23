@@ -26,12 +26,10 @@ if __name__ == '__main__':
     rooms = load_from_json(path,'rooms.json',Room)
     courses = load_from_json(path,'course.json',Course)
 
-    for s in students:
-        print(s.courses)
-        
     tt = TimeTable(students,teachers,rooms,courses)
     model = cp_model.CpModel()
-    #res = tt.add_variables(model)
+    
 
     tt.solve()
+    tt.print_classes(tt.solver)
     

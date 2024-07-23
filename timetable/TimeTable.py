@@ -14,51 +14,9 @@ class TimeTable:
         self.student_var_map = None
         self.teacher_var_map = None
 
+        self.solver = None
 
-    def add_coures_constraints(self, model):
-        # At most one course per room per slot
-        for room in self.classrooms:
-            for slot in room.slots:
-                model.AddAtMostOne(
-                    self.course_var_map[(course, room, slot)]
-                    for course in self.courses
-                )
 
-        # Add Exactly  1 course per week
-        for course in self.courses:
-                model.AddExactlyOne(
-                    self.course_var_map[(course, room, slot)]
-                    for room in self.classrooms for slot in  room.slots
-                )
-
-        # If teacher can teach course in given time slot,
-        # then course must exist in room
-        for teacher,course,slot in self.teacher_var_map.keys():
-                model.AddImplication(
-                    self.teacher_var_map[(teacher,course,slot)],
-                    self.course_var_map[(course,room,slot)]
-                )
-
-        for course,room,slot in self.course_var_map.keys():
-            for student,c,s in self.student_var_map:
-                if slot == s and course == c:
-                    model.AddImplication(
-                        self.course_var_map[(course,room,slot)],
-                        self.student_var_map[(student,course, slot)]
-                    )
-        
-        for student in self.students:
-            for course in student.courses:
-                model.AddExactlyOne(
-                    self.student_var_map[(student,course,slot)]
-                    for slot in student.slots
-                )
-        for student,course,slot in self.student_var_map.keys():
-            model.AddImplication(
-                self.student_var_map[(student,course,slot)],
-                self.course_var_map[(course,room,slot)]
-            )
-        
 
 
     def add_variables(self, model):
@@ -100,27 +58,86 @@ class TimeTable:
         self.student_var_map = student_var_map
         self.teacher_var_map = teacher_var_map
     
+    def add_teacher_constraints(self, model):
 
 
-    def add_constraints(self, model):
-
-        self.add_coures_constraints(model)
-
-
-        # Teacher constraint: At most one course per teacher per slot
+        # At most one course per teacher per slot
         for teacher in self.teachers:
             for slot in teacher.slots:
                 model.AddAtMostOne(
                     self.teacher_var_map[(teacher, course, slot)]
                     for course in teacher.courses
                 )
-        # Ensure each teacher has at least one course
-        for teacher in self.teachers:
-            model.Add(
-                sum(self.teacher_var_map[(teacher, course, slot)]
-                    for course in teacher.courses
-                    for slot in teacher.slots) >= 1
+        
+        # Ensure each course has exactly one teacher
+        for course in self.courses:
+           model.AddExactlyOne(
+                self.teacher_var_map[(teacher,course,slot)]
+                for teacher in self.teachers for slot in teacher.slots if (teacher,course,slot) in self.teacher_var_map
             )
+
+
+    def add_coures_constraints(self, model):
+        # At most one course per room per slot
+        for room in self.classrooms:
+            for slot in room.slots:
+                model.AddAtMostOne(
+                    self.course_var_map[(course, room, slot)]
+                    for course in self.courses
+                )
+
+        # Add Exactly  1 course per week
+        for course in self.courses:
+                model.AddExactlyOne(
+                    self.course_var_map[(course, room, slot)]
+                    for room in self.classrooms for slot in  room.slots
+                )
+
+        # If teacher can teach course in given time slot,
+        # then course must exist in room
+        for teacher,course,slot in self.teacher_var_map.keys():
+                model.AddImplication(
+                    self.teacher_var_map[(teacher,course,slot)],
+                    self.course_var_map[(course,room,slot)]
+                )
+
+        for course,room,slot in self.course_var_map.keys():
+            for student,c,s in self.student_var_map:
+                if slot == s and course == c:
+                    model.AddImplication(
+                        self.course_var_map[(course,room,slot)],
+                        self.student_var_map[(student,course, slot)]
+                    )
+        
+        #Ensure each course has at least one teacher     
+        for course in self.courses:
+            model.Add(
+                sum(self.teacher_var_map[(teacher,course,slot)]
+                    for teacher in self.teachers
+                    for slot in teacher.slots if (teacher,course,slot) in self.teacher_var_map
+                    ) >= 1
+            )
+
+        for student in self.students:
+            for course in student.courses:
+                model.AddExactlyOne(
+                    self.student_var_map[(student,course,slot)]
+                    for slot in student.slots
+                )
+
+        for student,course,slot in self.student_var_map.keys():
+            model.AddImplication(
+                self.student_var_map[(student,course,slot)],
+                self.course_var_map[(course,room,slot)]
+            )
+        
+
+    def add_constraints(self, model):
+
+        self.add_coures_constraints(model)
+        self.add_teacher_constraints(model)
+
+
         for student in self.students:
             model.Add(
                 sum(self.student_var_map[(student,course,slot)]
@@ -139,10 +156,11 @@ class TimeTable:
         student_variables = self.student_var_map
         teacher_variables = self.teacher_var_map
         courses_variables = self.course_var_map
-
+        #print(self.course_var_map)
         # Create the solver and solve
         solver = cp_model.CpSolver()
         status = solver.Solve(model)
+        self.solver = solver
         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
             print('Solution:')
             # Add printed solution
@@ -157,25 +175,34 @@ class TimeTable:
             print('Students')
             for var, variable in student_variables.items():
                 if solver.value(variable) == 1:
-                    print(var)
+                   print(var)
         else:
             print('No solution found.')
 
     def print_classes(self, solver):
 
         courses = []
-
-        for var,variable in {self.course_var_map}.items():
+        
+        for var,variable in self.course_var_map.items():
 
             if solver.value(variable) == 1:
                 course = var[0]
                 room = var[1]
                 slot = var[2]
+                print(str(course) + "  " + str(slot))
 
-                for  t,t2  in {self.teacher_var_map}.items():
+                for  t,t2  in self.teacher_var_map.items():
 
-                    if solver.value(t2) == 1 and slot == t[2] and room == t[1]:
-                        pass
+                    if solver.value(t2) == 1 and slot == t[2] and course == t[1]:
+                        print('\t'+str(t[0]))
+                
+
+                        for s,s2 in self.student_var_map.items():
+                            if solver.value(s2) == 1 and slot == s[2] and course == s[1]:
+                                print('\t\t '+str(s[0]))
+                print('---------------------------------')
+
+                        
 
                 
 
