@@ -1,0 +1,4 @@
+[
+    "{\"id\": \"Room1\", \"slots\": [{\"day\": \"saturday\", \"start\": 13, \"end\": 14}]}",
+    "{\"id\": \"Room2\", \"slots\": [{\"day\": \"saturday\", \"start\": 12, \"end\": 13}, {\"day\": \"saturday\", \"start\": 13, \"end\": 14}]}"
+]

@@ -1,0 +1,4 @@
+[
+    "{\"id\": \"Room1\", \"slots\": [{\"day\": \"tuesday\", \"start\": 11, \"end\": 12}, {\"day\": \"tuesday\", \"start\": 13, \"end\": 14}, {\"day\": \"friday\", \"start\": 12, \"end\": 13}, {\"day\": \"friday\", \"start\": 11, \"end\": 12}, {\"day\": \"tuesday\", \"start\": 10, \"end\": 11}, {\"day\": \"friday\", \"start\": 13, \"end\": 14}, {\"day\": \"friday\", \"start\": 10, \"end\": 11}]}",
+    "{\"id\": \"Room2\", \"slots\": [{\"day\": \"tuesday\", \"start\": 13, \"end\": 14}, {\"day\": \"friday\", \"start\": 12, \"end\": 13}, {\"day\": \"friday\", \"start\": 11, \"end\": 12}, {\"day\": \"tuesday\", \"start\": 10, \"end\": 11}, {\"day\": \"friday\", \"start\": 13, \"end\": 14}, {\"day\": \"friday\", \"start\": 10, \"end\": 11}]}"
+]
