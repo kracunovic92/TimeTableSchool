@@ -12,13 +12,13 @@ def generate_slots(days,start_h,end_h):
     return [Slot(day,i,i+1) for day in days for i in range(start_h,end_h)]
 
 def generate_rooms(slots, number = 2):
-    return [Room(f'Room{i+1}', random.sample(slots,k = random.randint(1,len(slots)))) for i in range(number)]
+    return [Room(f'Room{i+1}', random.sample(slots,k = random.randint(10,len(slots)))) for i in range(number)]
 
 def generate_students(slots, number = 10):
-    return [Student(f"S#{i}", f"SL#{i}", f"12345678{i}", [], random.sample(slots,k = random.randint(1,len(slots)))) for i in range(number)]
+    return [Student(f"S#{i}", f"SL#{i}", f"12345678{i}", [], random.sample(slots,k = random.randint(10,len(slots)))) for i in range(number)]
 
 def generate_teachers(slots, number = 5):
-    return [Teacher(f"T#{i}", f"TL#{i}", "English", [], random.sample(slots, k=random.randint(1,len(slots)))) for i in range(number)]
+    return [Teacher(f"T#{i}", f"TL#{i}", "English", [], random.sample(slots, k=random.randint(10,len(slots)))) for i in range(number)]
 def generate_courses(languages, number = 2):
     return [Course(lang,i+1) for  i in range(number) for lang in languages]
 
@@ -58,8 +58,8 @@ def generate_json_list(path,data,name):
         json.dump(json_data,f, indent= 4)
 
 def select_random_pair(a, b):
-    first = random.randint(a, b - 1)
-    second = random.randint(first + 1, b)
+    first = random.randint(8,9)
+    second = random.randint(20, 21)
     return [first, second]
 
 if __name__ == '__main__':
