@@ -1,10 +1,6 @@
 [
-    "{\"language\": \"Russian\", \"id\": 1, \"students\": null, \"teacher\": null, \"slots\": null}",
+    "{\"language\": \"English\", \"id\": 1, \"students\": null, \"teacher\": null, \"slots\": null}",
     "{\"language\": \"Spain\", \"id\": 1, \"students\": null, \"teacher\": null, \"slots\": null}",
     "{\"language\": \"Serbian\", \"id\": 1, \"students\": null, \"teacher\": null, \"slots\": null}",
-    "{\"language\": \"English\", \"id\": 1, \"students\": null, \"teacher\": null, \"slots\": null}",
-    "{\"language\": \"Russian\", \"id\": 2, \"students\": null, \"teacher\": null, \"slots\": null}",
-    "{\"language\": \"Spain\", \"id\": 2, \"students\": null, \"teacher\": null, \"slots\": null}",
-    "{\"language\": \"Serbian\", \"id\": 2, \"students\": null, \"teacher\": null, \"slots\": null}",
-    "{\"language\": \"English\", \"id\": 2, \"students\": null, \"teacher\": null, \"slots\": null}"
+    "{\"language\": \"Russian\", \"id\": 1, \"students\": null, \"teacher\": null, \"slots\": null}"
 ]

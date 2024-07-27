@@ -33,5 +33,5 @@ if __name__ == '__main__':
     tt.solve_with_incremental_constraints()
 
 
-    #tt.print_classes(tt.solver)
+    tt.print_classes(tt.solver)
 

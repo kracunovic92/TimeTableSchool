@@ -1,3 +1,6 @@
 dist
 timetable.egg-info
 __pycache__
+.env
+poetry.lock
+.hypothesis

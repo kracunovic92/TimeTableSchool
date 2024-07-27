@@ -137,9 +137,6 @@ class TimeTable:
                 self.student_var_map[(student,course,slot)] <= cp_model.LinearExpr.Sum(course_var)
             )
             
-        
- 
-
 
     def add_teacher_constraints(self, model):
         
@@ -156,7 +153,16 @@ class TimeTable:
                 model.AddAtMostOne(
                     [self.student_var_map[(student,course,slot)] for slot in student.slots]
                 )
-        
+
+    def add_optimal_number_of_rooms(self, model):
+
+        rooms = self.course_var_map
+        rm_list = []
+
+        for r,v in rooms.items():
+            rm_list.append(v)
+
+        model.Minimize(sum(rm_list)) 
     def add_optimal_number_of_students(self, model):
         
         def calculate_number_of_students():
@@ -182,9 +188,44 @@ class TimeTable:
         model.Maximize(sum(objective_terms))
 
 
+    def find_best_solution(self):
+        
+        model = cp_model.CpModel()
+        solver = cp_model.CpSolver()
+        best_solution = None
+
+        self.add_variables(model)
+
+        base_constraints_status = self.add_base_constraints(model)
+
+        if not base_constraints_status:
+            print("Fix base constarints")
+            return False
+        
 
 
+            
 
+
+    def add_base_constraints(self, model, solver):
+        base_constraints = []
+        base_constraints.append(self.add_base_course_constraints)
+        base_constraints.append(self.add_base_teacher_constraints)
+        base_constraints.append(self.add_base_student_constraints)
+        
+        for i, const_function in enumerate(base_constraints):
+            const_function(model)
+            status = solver.Solve(model)
+            if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+                print("Basic constraints added")
+                return True
+            else:
+                print("Some misstake with basic constraints")
+                return False
+        
+    """
+        This function should find 1 solution that exist
+    """
     def solve_with_incremental_constraints(self):
 
         model = cp_model.CpModel()
@@ -202,6 +243,7 @@ class TimeTable:
         constraints.append(self.add_coures_constraints)
 
         self.add_optimal_number_of_students(model)
+        #self.add_optimal_number_of_rooms(model)
 
         for i, const_funct  in enumerate(base_constraints):
             print(f"SOLUTION {i}: ")
@@ -258,49 +300,6 @@ class TimeTable:
         solver = best_solution
 
 
-
-    def solve(self):
-        model = cp_model.CpModel()
-        # Add variables
-        self.add_variables(model)
-        self.add_base_course_constraints(model)
-        self.add_base_teacher_constraints(model)
-        self.add_base_student_constraints(model)
-        self.add_coures_constraints(model)
-        self.add_teacher_constraints(model)
-
-        student_variables = self.student_var_map
-        teacher_variables = self.teacher_var_map
-        courses_variables = self.course_var_map
-        #print(self.course_var_map)
-        for c in courses_variables:
-            print(c)
-        for t in teacher_variables:
-            print(t)
-        for s in student_variables:
-            print(s)
-        # Create the solver and solve
-        solver = cp_model.CpSolver()
-        status = solver.Solve(model)
-        self.status = status
-        self.solver = solver
-        if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-            print('Solution:')
-            # Add printed solution
-            for var, variable in courses_variables.items():
-
-                if solver.value(variable) == 1:
-                    print(var)
-            print('Teachers')
-            for var, variable in teacher_variables.items():
-                if solver.value(variable) == 1:
-                    print(var)
-            print('Students')
-            for var, variable in student_variables.items():
-                if solver.value(variable) == 1:
-                   print(var)
-        else:
-            print('No solution found.')
 
     def print_classes(self, solver):
 

@@ -69,7 +69,7 @@ if __name__ == '__main__':
     days = [random.sample(list_days, k =random.randint(1,len(list_days))) for _ in range(10)]
     h = [select_random_pair(8,15) for _ in range(10)]
     number_rooms = [random.randint(1,3) for _ in range(10)]
-    number_students = [random.randint(5,30) for _ in range(10)]
+    number_students = [random.randint(40,70) for _ in range(10)]
     number_teachers = [random.randint(2,6) for _ in range(10)]
     languages = [random.sample(list_lang, k = random.randint(1,len(list_lang))) for _ in range(10)]
     number_courses = [random.randint(1,2) for _ in range(10)]
