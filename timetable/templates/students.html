@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Students</title>
+</head>
+<body>
+    <h1>Manage Students</h1>
+    <form method="POST">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br>
+        <label for="course_ids">Courses:</label><br>
+        <select id="course_ids" name="course_ids" multiple>
+            <!-- Dynamically generate this list from the available courses -->
+            {% for course in courses %}
+                <option value="{{ course.id }}">{{ course.language }}</option>
+            {% endfor %}
+        </select><br>
+        <button type="submit">Add Student</button>
+    </form>
+    <a href="/">Back to Home</a>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timetable</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Timetable</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Course</th>
+                <th>Teacher</th>
+                <th>Room</th>
+                <th>Slot</th>
+                <th>Students</th>
+                <th>Assign Students</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in data %}
+            <tr>
+                <td>{{ item['course'] }}</td>
+                <td>{{ item['teacher'] }}</td>
+                <td>{{ item['room'] }}</td>
+                <td>{{ item['slot'] }}</td>
+                <td>
+                    {% for student in item['students'] %}
+                        {{ student }}<br>
+                    {% endfor %}
+                </td>
+                <td>
+                    <form class="assign-student-form">
+                        <input type="hidden" name="course" value="{{ item['course'] }}">
+                        <input type="hidden" name="teacher" value="{{ item['teacher'] }}">
+                        <input type="hidden" name="room" value="{{ item['room'] }}">
+                        <input type="hidden" name="slot" value="{{ item['slot'] }}">
+                        <select name="student">
+                            {% for student in all_students %}
+                            <option value="{{ student['name'] }}">{{ student['name'] }} </option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit">Assign</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        document.querySelectorAll('.assign-student-form').forEach(form => {
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const formData = new FormData(form);
+
+                const response = await fetch('/assign_student', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('Student assigned successfully');
+                    location.reload(); // Reload to see the updated data
+                } else {
+                    alert('Failed to assign student');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

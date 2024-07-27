@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Assign Student to Course</h2>
+<form method="POST">
+    <label for="course_id">Course:</label>
+    <select name="course_id">
+        {% for course in courses %}
+        <option value="{{ course.id }}">{{ course.name }} - {{ course.teacher.name }}</option>
+        {% endfor %}
+    </select>
+    <label for="student_id">Student:</label>
+    <select name="student_id">
+        {% for student in students %}
+        <option value="{{ student.id }}">{{ student.name }}</option>
+        {% endfor %}
+    </select>
+    <label for="day">Day:</label>
+    <input type="text" name="day" required>
+    <label for="time">Time:</label>
+    <input type="text" name="time" required>
+    <button type="submit">Assign</button>
+</form>
+<a href="{{ url_for('index') }}">Back to Timetable</a>
+{% endblock %}

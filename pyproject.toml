@@ -17,6 +17,7 @@ numpy = "^1.0"
 ortools = "^9.10"
 python-dotenv = "^1.0.0"
 flask = "^3.0.3"
+flask_sqlalchemy = "^3.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
