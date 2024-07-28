@@ -1,5 +1,7 @@
 
+from collections import defaultdict
 from ortools.sat.python import cp_model
+from SolutionCollector import SolutionCollector
 
 class TimeTable:
 
@@ -12,12 +14,40 @@ class TimeTable:
         self.course_var_map = None
         self.student_var_map = None
         self.teacher_var_map = None
-
+        self.max_solutions = 5
         self.solver = None
+        self.solutions = []
 
 
-
-
+    def add_solution(self, solver):
+        classes = []
+        for var, variable in self.course_var_map.items():
+            if solver.Value(variable) == 1:
+                course = var[0]
+                room = var[1]
+                slot = var[2]
+                classroom = {
+                    'course': course,
+                    'room': room,
+                    'slot': slot,
+                    'teacher': None,
+                    'students': []
+                }
+                
+                # Find the teacher for this course and slot
+                for t, t2 in self.teacher_var_map.items():
+                    if solver.Value(t2) == 1 and slot == t[2] and course == t[1]:
+                        classroom['teacher'] = t[0]
+                
+                # Find students for this course and slot
+                for s, s2 in self.student_var_map.items():
+                    if solver.Value(s2) == 1 and slot == s[2] and course == s[1]:
+                        classroom['students'].append(s[0])
+                
+                classes.append(classroom)
+                
+        self.solutions.append(classes)
+        
     def add_variables(self, model):
         students = self.students.copy()
         teachers = self.teachers.copy()
@@ -70,7 +100,6 @@ class TimeTable:
             model.AddBoolOr(self.course_var_map[(course,room,slot)]
                             for room in self.classrooms for slot in room.slots)
             
-
     def add_base_teacher_constraints(self,model):
         # At most one course per teacher per slot
         for teacher in self.teachers:
@@ -99,7 +128,6 @@ class TimeTable:
             model.Add(
                 self.course_var_map[(course,room,slot)] <= cp_model.LinearExpr.Sum(teacher_vars)
             )
-
 
     def add_base_student_constraints(self,model):
 
@@ -137,14 +165,12 @@ class TimeTable:
                 self.student_var_map[(student,course,slot)] <= cp_model.LinearExpr.Sum(course_var)
             )
             
-
     def add_teacher_constraints(self, model):
         
         # Teacher should teach only if students can come to course
         for teacher,course,slot in self.teacher_var_map.keys():
             students = [self.student_var_map[(s,course,slot)] for s in self.students if (s,course,slot) in self.student_var_map]
             model.Add(self.teacher_var_map[(teacher,course,slot)] <= (cp_model.LinearExpr.Sum(students)))
-
 
     def add_coures_constraints(self, model):
         
@@ -163,6 +189,7 @@ class TimeTable:
             rm_list.append(v)
 
         model.Minimize(sum(rm_list)) 
+    
     def add_optimal_number_of_students(self, model):
         
         def calculate_number_of_students():
@@ -187,25 +214,51 @@ class TimeTable:
 
         model.Maximize(sum(objective_terms))
 
+    def exclude_current_solution(self,model,solver):
+        literals = []
+        for var in (
+            list(self.course_var_map.values()) +
+            list(self.teacher_var_map.values()) +
+            list(self.student_var_map.values())
+        ):
+            # Create a boolean variable to represent the inequality
+            diff_var = model.NewBoolVar(f'diff_{var.Name()}')
+            model.Add(var != solver.Value(var)).OnlyEnforceIf(diff_var)
+            model.Add(var == solver.Value(var)).OnlyEnforceIf(diff_var.Not())
+            literals.append(diff_var)
+    
+        # Ensure at least one variable is different
+        model.AddBoolOr(literals)
+  
+    def find_all_solutions(self):
 
-    def find_best_solution(self):
-        
         model = cp_model.CpModel()
         solver = cp_model.CpSolver()
-        best_solution = None
-
         self.add_variables(model)
+        base_constrains_status = self.add_base_constraints(model, solver)
+        other_constraints_status = self.add_other_constraints(model, solver)
+        self.add_optimal_number_of_rooms(model)
+        #self.add_optimal_number_of_students(model)
 
-        base_constraints_status = self.add_base_constraints(model)
+        if base_constrains_status and other_constraints_status:
 
-        if not base_constraints_status:
-            print("Fix base constarints")
-            return False
-        
+            status = solver.Solve(model)
+            i = 1
+            while status == cp_model.OPTIMAL and i < self.max_solutions:
+                i += 1
+                self.exclude_current_solution(model,solver)
+                status = solver.Solve(model)
+                self.add_solution(solver)
+                #self.print_classes(solver)
+    
+    def add_other_constraints(self,model,solver):
+        constraints = []
+        constraints.append(self.add_coures_constraints)
+        constraints.append(self.add_teacher_constraints)
+        for const_function in constraints:
+            const_function(model)
 
-
-            
-
+        return True
 
     def add_base_constraints(self, model, solver):
         base_constraints = []
@@ -218,16 +271,52 @@ class TimeTable:
             status = solver.Solve(model)
             if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
                 print("Basic constraints added")
-                return True
             else:
                 print("Some misstake with basic constraints")
                 return False
+        self.model = model
+        return True
         
-    """
-        This function should find 1 solution that exist
-    """
-    def solve_with_incremental_constraints(self):
 
+    def print_solution(self, solution):
+        
+        for classroom in solution:
+            print(f"{classroom['course']}  : Room: {classroom['room']} : Time: {classroom['slot']}")
+            print(f"Teacher : {classroom['teacher']}")
+            for i,s in enumerate(classroom['students']):
+                print(f'{i} : {s}')
+
+
+    def print_solutions(self):
+        solutions = self.solutions.copy()
+
+        for i,sol in enumerate(solutions):
+            print(f"SOLUTION {i}:")
+            self.print_solution(sol)
+
+    def print_classes(self, solver):
+        for var,variable in self.course_var_map.items():
+
+            if solver.value(variable) == 1:
+                course = var[0]
+                slot = var[2]
+                print(str(course) + "  " + str(slot))
+
+                for  t,t2  in self.teacher_var_map.items():
+
+                    if solver.value(t2) == 1 and slot == t[2] and course == t[1]:
+                        print('\t'+str(t[0]))
+                
+                        for s,s2 in self.student_var_map.items():
+                            if solver.value(s2) == 1 and slot == s[2] and course == s[1]:
+                                print('\t\t '+str(s[0]))
+                print('---------------------------------')
+
+                        
+    def solve_with_incremental_constraints(self):
+        """
+        Testing function
+        """
         model = cp_model.CpModel()
         solver = cp_model.CpSolver()
         best_solution = None
@@ -243,13 +332,15 @@ class TimeTable:
         constraints.append(self.add_coures_constraints)
 
         self.add_optimal_number_of_students(model)
-        #self.add_optimal_number_of_rooms(model)
+        self.add_optimal_number_of_rooms(model)
 
         for i, const_funct  in enumerate(base_constraints):
             print(f"SOLUTION {i}: ")
             const_funct(model)
         
             status = solver.Solve(model)
+            if status == cp_model.FEASIBLE:
+                print( "Feasable")
             if status == cp_model.FEASIBLE or status == cp_model.OPTIMAL:
                 print(f'Solution for constraint {const_funct}:')
                     # Add printed solution
@@ -270,8 +361,6 @@ class TimeTable:
             else:
                 print("Solution with basic constraints doesn't exist")
 
-
-        print("ADD OTHER CONSTRAINTS")
         for i, const_funct in enumerate(constraints):
             print(f"Other {i}: ")
             const_funct(model)
@@ -300,30 +389,6 @@ class TimeTable:
         solver = best_solution
 
 
-
-    def print_classes(self, solver):
-
-        courses = []
-        
-        for var,variable in self.course_var_map.items():
-
-            if solver.value(variable) == 1:
-                course = var[0]
-                slot = var[2]
-                print(str(course) + "  " + str(slot))
-
-                for  t,t2  in self.teacher_var_map.items():
-
-                    if solver.value(t2) == 1 and slot == t[2] and course == t[1]:
-                        print('\t'+str(t[0]))
-                
-
-                        for s,s2 in self.student_var_map.items():
-                            if solver.value(s2) == 1 and slot == s[2] and course == s[1]:
-                                print('\t\t '+str(s[0]))
-                print('---------------------------------')
-
-                        
 
                 
 

@@ -27,11 +27,11 @@ if __name__ == '__main__':
     courses = load_from_json(path,'course.json',Course)
 
     tt = TimeTable(students,teachers,rooms,courses)
-    model = cp_model.CpModel()
-    
 
-    tt.solve_with_incremental_constraints()
+    tt.find_all_solutions()
+    #tt.solve_with_incremental_constraints()
 
+    tt.print_solutions()
 
-    tt.print_classes(tt.solver)
+    #tt.print_classes(tt.solver)
 
