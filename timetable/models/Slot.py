@@ -10,9 +10,9 @@ class Slot:
         self.check_day(day)
         self.check_time(start_time,end_time)
 
-        self.day = day.lower()
-        self.start_time = start_time
-        self.end_time = end_time
+        self._day = day.lower()
+        self._start_time = start_time
+        self._end_time = end_time
 
 
     def to_dict(self):
@@ -92,3 +92,26 @@ class Slot:
         
         return list(seen)
     
+    @property
+    def start_time(self):
+        return self._start_time
+
+    @start_time.setter
+    def start_time(self, time):
+        self._start_time = time
+
+    @property
+    def end_time(self):
+        return self._end_time
+
+    @end_time.setter
+    def end_time(self, time):
+        self._end_time = time
+
+    @property
+    def day(self):
+        return self._day
+
+    @day.setter
+    def day(self, day):
+        self._day = day

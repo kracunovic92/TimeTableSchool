@@ -2,73 +2,95 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Timetable</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Timetable Solutions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        .container {
+            width: 90%;
+            margin: auto;
+            overflow: hidden;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        .timetable {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+        .days {
+            display: flex;
+            width: 100%;
+        }
+        .day {
+            flex: 1;
+            background: #ffffff;
+            border: 1px solid #ccc;
+            margin: 0 5px;
+        }
+        .day-header {
+            background-color: #f0f0f0;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .slots {
+            padding: 10px;
+        }
+        .slot {
+            background: #e0e7ff;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .slot-course {
+            font-weight: bold;
+        }
+        .slot-details {
+            margin-top: 5px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Timetable</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>Course</th>
-                <th>Teacher</th>
-                <th>Room</th>
-                <th>Slot</th>
-                <th>Students</th>
-                <th>Assign Students</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in data %}
-            <tr>
-                <td>{{ item['course'] }}</td>
-                <td>{{ item['teacher'] }}</td>
-                <td>{{ item['room'] }}</td>
-                <td>{{ item['slot'] }}</td>
-                <td>
-                    {% for student in item['students'] %}
-                        {{ student }}<br>
+    <div class="container">
+        <h1>Timetable Solutions</h1>
+        {% for solution in solutions %}
+            <div class="timetable">
+                <h2>Solution {{ loop.index }}</h2>
+                <div class="days">
+                    {% for day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] %}
+                        <div class="day">
+                            <div class="day-header">{{ day }}</div>
+                            <div class="slots">
+                                {% for slot in [8, 9, 10, 11, 12, 13, 14, 15, 16, 17] %}
+                                    {% for classroom in solution %}
+                                        {% if classroom['slot'].start_time == slot and classroom['slot'].day == day %}
+                                            <div class="slot">
+                                                <div class="slot-course">{{ classroom['course']['language'] }} ({{ classroom['course']['id'] }}) {{ classroom['slot'].start_time}} - {{classroom['slot'].end_time}}</div>
+                                               <div class="slot-details">
+                                                    Room: {{ classroom['room']['name'] }}<br>
+                                                    Teacher: {{ classroom['teacher']['name'] if classroom['teacher'] else 'N/A' }}<br>
+                                                    Students: 
+                                                    {% for student in classroom['students'] %}
+                                                        {{ student['name'] }}{% if not loop.last %}, {% endif %}
+                                                    {% endfor %}
+                                                </div> 
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                        </div>
                     {% endfor %}
-                </td>
-                <td>
-                    <form class="assign-student-form">
-                        <input type="hidden" name="course" value="{{ item['course'] }}">
-                        <input type="hidden" name="teacher" value="{{ item['teacher'] }}">
-                        <input type="hidden" name="room" value="{{ item['room'] }}">
-                        <input type="hidden" name="slot" value="{{ item['slot'] }}">
-                        <select name="student">
-                            {% for student in all_students %}
-                            <option value="{{ student['name'] }}">{{ student['name'] }} </option>
-                            {% endfor %}
-                        </select>
-                        <button type="submit">Assign</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <script>
-        document.querySelectorAll('.assign-student-form').forEach(form => {
-            form.addEventListener('submit', async (event) => {
-                event.preventDefault();
-                const formData = new FormData(form);
-
-                const response = await fetch('/assign_student', {
-                    method: 'POST',
-                    body: formData
-                });
-                const result = await response.json();
-                if (result.success) {
-                    alert('Student assigned successfully');
-                    location.reload(); // Reload to see the updated data
-                } else {
-                    alert('Failed to assign student');
-                }
-            });
-        });
-    </script>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
 </body>
 </html>

@@ -27,8 +27,8 @@ class TimeTable:
                 room = var[1]
                 slot = var[2]
                 classroom = {
-                    'course': course,
-                    'room': room,
+                    'course': course.to_dict(),
+                    'room': room.to_dict(),
                     'slot': slot,
                     'teacher': None,
                     'students': []
@@ -37,12 +37,12 @@ class TimeTable:
                 # Find the teacher for this course and slot
                 for t, t2 in self.teacher_var_map.items():
                     if solver.Value(t2) == 1 and slot == t[2] and course == t[1]:
-                        classroom['teacher'] = t[0]
+                        classroom['teacher'] = t[0].to_dict()
                 
                 # Find students for this course and slot
                 for s, s2 in self.student_var_map.items():
                     if solver.Value(s2) == 1 and slot == s[2] and course == s[1]:
-                        classroom['students'].append(s[0])
+                        classroom['students'].append(s[0].to_dict())
                 
                 classes.append(classroom)
                 
@@ -240,16 +240,21 @@ class TimeTable:
         self.add_optimal_number_of_rooms(model)
         #self.add_optimal_number_of_students(model)
 
+
         if base_constrains_status and other_constraints_status:
 
             status = solver.Solve(model)
             i = 1
             while status == cp_model.OPTIMAL and i < self.max_solutions:
+             
+
                 i += 1
                 self.exclude_current_solution(model,solver)
                 status = solver.Solve(model)
                 self.add_solution(solver)
                 #self.print_classes(solver)
+
+        return self.solutions
     
     def add_other_constraints(self,model,solver):
         constraints = []

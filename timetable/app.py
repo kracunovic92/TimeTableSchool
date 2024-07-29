@@ -5,6 +5,7 @@ import os
 app = Flask(__name__)
 
 from models import Course, Room, Teacher, Student, Slot
+from solver_helper import run_solver, load_from_json
 
 data_courses = []
 data_students = []
@@ -159,9 +160,13 @@ def manage_students():
         return redirect(url_for('index'))
     return render_template('students.html', courses=data_courses)
 
-@app.route('/export')
-def export_data():
-    return jsonify(data)
+@app.route('/view_timetable')
+def view_timetable():
+    solutions = run_solver()
+    return render_template('timetable.html', solutions=solutions)
+
+
+    
 
 def save_data(data_type):
     with open(f'outputs/{data_type}.json', 'w') as f:

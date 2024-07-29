@@ -11,13 +11,7 @@
         <li><a href="{{ url_for('manage_classrooms') }}">Manage Classrooms</a></li>
         <li><a href="{{ url_for('manage_teachers') }}">Manage Teachers</a></li>
         <li><a href="{{ url_for('manage_students') }}">Manage Students</a></li>
-    </ul>
-    <h2>Export Data</h2>
-    <ul>
-        <li><a href="{{ url_for('export_data', data_type='courses') }}">Export Courses</a></li>
-        <li><a href="{{ url_for('export_data', data_type='classrooms') }}">Export Classrooms</a></li>
-        <li><a href="{{ url_for('export_data', data_type='teachers') }}">Export Teachers</a></li>
-        <li><a href="{{ url_for('export_data', data_type='students') }}">Export Students</a></li>
+        <li><a href="{{ url_for('view_timetable') }}">View Timetable</a></li> 
     </ul>
 </body>
 </html>
