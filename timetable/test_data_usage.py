@@ -20,16 +20,18 @@ if __name__ == '__main__':
 
     load_dotenv()
     path = os.getenv('DATA_EXAMPLE_PATH')
-
+    path = path  + '/data_set_1'
     teachers = load_from_json(path,'teachers.json',Teacher)
     students =  load_from_json(path,'students.json',Student)
     rooms = load_from_json(path,'rooms.json',Room)
     courses = load_from_json(path,'course.json',Course)
 
     tt = TimeTable(students,teachers,rooms,courses)
-    model = cp_model.CpModel()
-    
 
-    tt.solve()
-    tt.print_classes(tt.solver)
-    
+    tt.find_all_solutions()
+    #tt.solve_with_incremental_constraints()
+
+    tt.print_solutions()
+
+    #tt.print_classes(tt.solver)
+
