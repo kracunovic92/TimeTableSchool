@@ -2,11 +2,10 @@ import json
 
 class Teacher:
 
-    def __init__(self, name, lastname, languages = [], courses = [], available_slots = []):
+    def __init__(self, name, lastname, courses = [], available_slots = []):
 
         self._name = name
         self._lastname = lastname
-        self._languages = languages or []
         self._courses = courses or []
         self._available_slots = available_slots or []
 
@@ -27,7 +26,6 @@ class Teacher:
         return {
             "name": self.name,
             "lastname": self.lastname,
-            "languages": self.languages,
             "courses": [course.to_dict(exclude_teacher=True) for course in self.courses] if self.courses else None,
             "slots": [slot.to_dict() for slot in self.slots] if self.slots else None,
         }
@@ -38,7 +36,7 @@ class Teacher:
         from .Slot import Slot
         courses = [Course.from_dict(course_data) for course_data in data['courses']] if data['courses'] else []
         slots = [Slot.from_dict(slot_data) for slot_data in data.get('slots', [])]
-        return cls(data['name'], data['lastname'], data['languages'], courses, slots)
+        return cls(data['name'], data['lastname'], courses, slots)
 
     def to_json(self):
         return json.dumps(self.to_dict())

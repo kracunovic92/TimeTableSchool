@@ -2,43 +2,71 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Teachers</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Teacher</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        td input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Manage Teachers</h1>
-    <form method="POST">
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required><br>
-        <label for="course_id">Course ID:</label>
-        <input type="text" id="course_id" name="course_id" required><br>
-        <label for="available_days">Available Days:</label><br>
-        <select id="available_days" name="available_days" multiple>
-            <option value="Monday">Monday</option>
-            <option value="Tuesday">Tuesday</option>
-            <option value="Wednesday">Wednesday</option>
-            <option value="Thursday">Thursday</option>
-            <option value="Friday">Friday</option>
-            <option value="Saturday">Saturday</option>
-            <option value="Sunday">Sunday</option>
-        </select><br>
-        <label for="available_slots">Available Slots:</label><br>
-        <select id="available_slots" name="available_slots" multiple>
-            <option value="08:00">08:00</option>
-            <option value="09:00">09:00</option>
-            <option value="10:00">10:00</option>
-            <option value="11:00">11:00</option>
-            <option value="12:00">12:00</option>
-            <option value="13:00">13:00</option>
-            <option value="14:00">14:00</option>
-            <option value="15:00">15:00</option>
-            <option value="16:00">16:00</option>
-            <option value="17:00">17:00</option>
-            <option value="18:00">18:00</option>
-            <option value="19:00">19:00</option>
-            <option value="20:00">20:00</option>
-        </select><br>
+    <h1>Add Teacher</h1>
+    <form action="{{ url_for('manage_teachers') }}" method="POST">
+        <label for="name">Teacher Name:</label>
+        <input type="text" id="name" name="name" required><br><br>
+
+        <label for="lastname">Teacher Lastname:</label>
+        <input type="text" id="lastname" name="lastname" required><br><br>
+        
+        <label for="course">Course:</label>
+        <select id="course" name="course" required>
+            {% for course in courses %}
+                <option value="{{ course.id }}">{{ course.language }}</option>
+            {% endfor %}
+        </select><br><br>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Available</th>
+                    <th>Time Slots</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                    <tr>
+                        <td>{{ day }}</td>
+                        <td>
+                            <input type="checkbox" name="days" value="{{ day }}">
+                        </td>
+                        <td>
+                            <select name="timeslots_{{ day }}" multiple>
+                                {% for slot in ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00'] %}
+                                    <option value="{{ slot }}">{{ slot }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table><br>
+
         <button type="submit">Add Teacher</button>
     </form>
-    <a href="/">Back to Home</a>
 </body>
 </html>

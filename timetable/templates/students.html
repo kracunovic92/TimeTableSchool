@@ -1,23 +1,64 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Students</title>
+    <title>Student Form</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <h1>Manage Students</h1>
-    <form method="POST">
+    <h1>Student Form</h1>
+    <form action="{{ url_for('manage_students') }}" method="POST">
         <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required><br>
-        <label for="course_ids">Courses:</label><br>
-        <select id="course_ids" name="course_ids" multiple>
-            <!-- Dynamically generate this list from the available courses -->
+        <input type="text" id="name" name="name" required><br><br>
+
+        <label for="lastname">Lastname:</label>
+        <input type="text" id="lastname" name="lastname" required><br><br>
+
+        <label for="courses">Courses:</label>
+        <select id="courses" name="courses" multiple required>
             {% for course in courses %}
                 <option value="{{ course.id }}">{{ course.language }}</option>
             {% endfor %}
-        </select><br>
+        </select><br><br>
+
+        <h3>Availability</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Available</th>
+                    <th>Time Slots</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                    <tr>
+                        <td>{{ day }}</td>
+                        <td>
+                            <input type="checkbox" name="days" value="{{ day }}">
+                        </td>
+                        <td>
+                            <select name="timeslots_{{ day }}" multiple>
+                                {% for slot in ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00'] %}
+                                    <option value="{{ slot }}">{{ slot }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table><br>
+
         <button type="submit">Add Student</button>
     </form>
-    <a href="/">Back to Home</a>
 </body>
 </html>

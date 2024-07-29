@@ -1,14 +1,40 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-from model import db, Teacher, Student, Course, Classroom, Availability
 import json
+import os
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db.init_app(app)
 
-def create_tables():
-    db.create_all()
+from models import Course, Room, Teacher, Student, Slot
+
+data_courses = []
+data_students = []
+data_teachers = []
+data_classrooms = []
+
+# Load existing data from JSON files if they exist
+def load_data():
+    if os.path.exists('outputs/courses.json'):
+        with open('outputs/courses.json', 'r') as f:
+            global data_courses
+            data = json.load(f)
+            data_courses = [Course.from_json(i) for i in data]
+    if os.path.exists('outputs/classrooms.json'):
+        with open('outputs/classrooms.json', 'r') as f:
+            global data_classrooms
+            data = json.load(f)
+            data_classrooms = [Room.from_json(i) for i in data]
+    if os.path.exists('outputs/teachers.json'):
+        with open('outputs/teachers.json', 'r') as f:
+            global data_teachers
+            data = json.load(f)
+            data_teachers = [Teacher.from_json(i) for i in data]
+    if os.path.exists('outputs/students.json'):
+        with open('outputs/students.json', 'r') as f:
+            global data_students
+            data = json.load(f)
+            data_students = [Student.from_json(i) for i in data]
+
+load_data()
 
 @app.route('/')
 def index():
@@ -17,106 +43,136 @@ def index():
 @app.route('/courses', methods=['GET', 'POST'])
 def manage_courses():
     if request.method == 'POST':
-        course_id = request.form['course_id']
-        language = request.form['language']
-        
-        course = Course(id=course_id, language=language)
-        db.session.add(course)
-        db.session.commit()
-        return redirect(url_for('manage_courses'))
-    
+        course = Course(
+            id=request.form['course_id'],
+            language=request.form['language'],
+        )
+        data_courses.append(course.to_json())
+        save_data('courses')
+        return redirect(url_for('index'))
     return render_template('courses.html')
 
 @app.route('/classrooms', methods=['GET', 'POST'])
 def manage_classrooms():
     if request.method == 'POST':
-        room_name = request.form['room_name']
-        available_days = request.form.getlist('available_days')
-        available_slots = request.form.getlist('available_slots')
-        
-        classroom = Classroom(name=room_name)
-        db.session.add(classroom)
-        db.session.commit()
-        
-        for day in available_days:
-            for slot in available_slots:
-                availability = Availability(day=day, slot=slot, classroom=classroom)
-                db.session.add(availability)
-        
-        db.session.commit()
-        return redirect(url_for('manage_classrooms'))
-    
+
+        global available_slots
+        available_slots = []
+
+        days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        for day in days:
+            # Get all time slots for the specific day
+            slots = request.form.getlist(f'availability[{day}][]')
+            for slot in slots:
+                start_time, end_time = slot.split('-')
+                start_hour = start_time.split(':')[0]
+                end_hour = end_time.split(':')[0]
+
+                available_slots.append(Slot(str(day), start_hour, end_hour))
+
+        classroom = Room(
+            room_id=request.form['name'],
+            available_slots = available_slots
+        )
+
+        data_classrooms.append(classroom.to_json())
+        save_data('classrooms')
+        return redirect(url_for('index'))
     return render_template('classrooms.html')
 
 @app.route('/teachers', methods=['GET', 'POST'])
 def manage_teachers():
     if request.method == 'POST':
+
         name = request.form['name']
-        course_id = request.form['course_id']
-        available_days = request.form.getlist('available_days')
-        available_slots = request.form.getlist('available_slots')
-        
-        teacher = Teacher(name=name, course_id=course_id)
-        db.session.add(teacher)
-        db.session.commit()
-        
-        for day in available_days:
-            for slot in available_slots:
-                availability = Availability(day=day, slot=slot, teacher=teacher)
-                db.session.add(availability)
-        
-        db.session.commit()
-        return redirect(url_for('manage_teachers'))
-    
-    return render_template('teachers.html')
+        lastname = request.form['lastname']
+        courses=request.form.getlist('course')
+
+        selected_courses = []
+
+        for i in data_courses:
+            if str(i.id) in courses:
+                selected_courses.append(i)
+
+        slots_tmp = []
+
+        days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        for day in days:
+            # Get all time slots for the specific day
+            slots = request.form.getlist(f'timeslots_{day}')
+            for slot in slots:
+                start_time, end_time = slot.split('-')
+                start_hour = start_time.split(':')[0]
+                end_hour = end_time.split(':')[0]
+
+                slots_tmp.append(Slot(str(day), start_hour, end_hour))
+
+        teacher = Teacher(
+            name = name,
+            lastname = lastname,
+            courses=selected_courses,
+            available_slots=slots_tmp
+        )
+
+        data_teachers.append(teacher.to_json())
+        save_data('teachers')
+        return redirect(url_for('index'))
+    return render_template('teachers.html', courses=data_courses)
 
 @app.route('/students', methods=['GET', 'POST'])
 def manage_students():
+
     if request.method == 'POST':
+
         name = request.form['name']
-        course_ids = request.form.getlist('course_ids')
-        
-        student = Student(name=name)
-        db.session.add(student)
-        db.session.commit()
-        
-        for course_id in course_ids:
-            student.courses.append(Course.query.get(course_id))
-        
-        db.session.commit()
-        return redirect(url_for('manage_students'))
-    
-    courses = Course.query.all()
-    return render_template('students.html', courses=courses)
+        lastname = request.form['lastname']
+        courses=request.form.getlist('courses')
 
-@app.route('/export/<data_type>')
-def export_data(data_type):
-    if data_type == 'courses':
-        data = Course.query.all()
-        data_list = [{'id': c.id, 'language': c.language} for c in data]
-        export_to_json(data_list, 'courses.json')
-    elif data_type == 'classrooms':
-        data = Classroom.query.all()
-        data_list = [{'name': c.name, 'availability': [{'day': a.day, 'slot': a.slot} for a in c.availabilities]} for c in data]
-        export_to_json(data_list, 'classrooms.json')
-    elif data_type == 'teachers':
-        data = Teacher.query.all()
-        data_list = [{'name': t.name, 'course_id': t.course_id, 'availability': [{'day': a.day, 'slot': a.slot} for a in t.availabilities]} for t in data]
-        export_to_json(data_list, 'teachers.json')
-    elif data_type == 'students':
-        data = Student.query.all()
-        data_list = [{'name': s.name, 'courses': [c.id for c in s.courses]} for s in data]
-        export_to_json(data_list, 'students.json')
-    else:
-        return jsonify({'error': 'Invalid data type'}), 400
+        selected_courses = []
 
-    return jsonify({'message': f'{data_type.capitalize()} data exported successfully'})
+        for i in data_courses:
+            if str(i.id) in courses:
+                selected_courses.append(i)
 
-def export_to_json(data_list, file_name):
-    with open(file_name, 'w') as f:
-        json.dump(data_list, f, indent=4)
+        slots_tmp = []
+
+        days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        for day in days:
+            # Get all time slots for the specific day
+            slots = request.form.getlist(f'timeslots_{day}')
+            for slot in slots:
+                start_time, end_time = slot.split('-')
+                start_hour = start_time.split(':')[0]
+                end_hour = end_time.split(':')[0]
+
+                slots_tmp.append(Slot(str(day), start_hour, end_hour))
+
+        student = Student(
+            name=name,
+            lastname=lastname,
+            courses=selected_courses,
+            available_slots=slots_tmp
+        )
+
+        data_students.append(student.to_json())
+        save_data('students')
+        return redirect(url_for('index'))
+    return render_template('students.html', courses=data_courses)
+
+@app.route('/export')
+def export_data():
+    return jsonify(data)
+
+def save_data(data_type):
+    with open(f'outputs/{data_type}.json', 'w') as f:
+        if data_type == "courses":
+            json.dump(data_courses, f, indent=4)
+        elif data_type == "teachers":
+            json.dump(data_teachers, f, indent=4)
+        elif data_type == "students":
+            json.dump(data_students, f, indent=4)
+        else:
+            json.dump(data_classrooms, f, indent=4)
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
