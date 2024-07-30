@@ -16,7 +16,8 @@ def load_from_json(path, filename, class_type):
 
 def run_solver():
     load_dotenv()
-    path = os.getenv('TIMETABLE_INPUT')
+    # path = os.getenv('TIMETABLE_INPUT')
+    path = os.getcwd()
     # path = os.getenv('DATA_EXAMPLE_PATH')
     # path = path  + '/data_set_1'
     students = load_from_json(path, 'students.json', Student)

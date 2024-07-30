@@ -3,6 +3,7 @@ import json
 import os
 
 app = Flask(__name__)
+print(os.getcwd())
 
 from models import Course, Room, Teacher, Student, Slot
 from solver_helper import run_solver, load_from_json
@@ -169,7 +170,7 @@ def view_timetable():
     
 
 def save_data(data_type):
-    with open(f'outputs/{data_type}.json', 'w') as f:
+    with open(f'{data_type}.json', 'w') as f:
         if data_type == "courses":
             json.dump(data_courses, f, indent=4)
         elif data_type == "teachers":

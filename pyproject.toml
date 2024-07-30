@@ -10,7 +10,7 @@ authors = ["Lazar"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.8, <3.12"
 requests = "^2.26.0"
 pandas = "^2.0.0"
 numpy = "^1.0"
@@ -18,6 +18,7 @@ ortools = "^9.10"
 python-dotenv = "^1.0.0"
 flask = "^3.0.3"
 flask_sqlalchemy = "^3.0.0"
+pyinstaller = "^5.6"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
@@ -29,3 +30,6 @@ packages = ["timetable"]
 minversion = "6.0"
 addopts = "-ra -q"
 testpaths = ["tests"]
+
+[tool.poetry.scripts]
+build = "pyinstaller:install"

@@ -1,7 +1,6 @@
 
 from collections import defaultdict
 from ortools.sat.python import cp_model
-from SolutionCollector import SolutionCollector
 
 class TimeTable:
 
