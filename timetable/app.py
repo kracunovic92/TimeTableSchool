@@ -15,28 +15,31 @@ data_classrooms = []
 
     
 
-
 def load_data():
     if os.path.exists('courses.json'):
-        with open('courses.json', 'r') as f:
-            global data_courses
-            data = json.load(f)
-            data_courses = [Course.from_json(i) for i in data]
+        if os.path.getsize('courses.json') != 0:
+            with open('courses.json', 'r') as f:
+                global data_courses
+                data = json.load(f)
+                data_courses = [Course.from_json(i) for i in data]
     if os.path.exists('classrooms.json'):
-        with open('classrooms.json', 'r') as f:
-            global data_classrooms
-            data = json.load(f)
-            data_classrooms = [Room.from_json(i) for i in data]
+        if os.path.getsize('classrooms.json') != 0:
+            with open('classrooms.json', 'r') as f:
+                global data_classrooms
+                data = json.load(f)
+                data_classrooms = [Room.from_json(i) for i in data]
     if os.path.exists('teachers.json'):
-        with open('teachers.json', 'r') as f:
-            global data_teachers
-            data = json.load(f)
-            data_teachers = [Teacher.from_json(i) for i in data]
+        if os.path.getsize('teachers.json') != 0:
+            with open('teachers.json', 'r') as f:
+                global data_teachers
+                data = json.load(f)
+                data_teachers = [Teacher.from_json(i) for i in data]
     if os.path.exists('students.json'):
-        with open('students.json', 'r') as f:
-            global data_students
-            data = json.load(f)
-            data_students = [Student.from_json(i) for i in data]
+        if os.path.getsize('students.json') != 0:
+            with open('students.json', 'r') as f:
+                global data_students
+                data = json.load(f)
+                data_students = [Student.from_json(i) for i in data]
 
 load_data()
 
@@ -46,11 +49,18 @@ def index():
 
 @app.route('/courses', methods=['GET', 'POST'])
 def manage_courses():
+    load_data()
+
     if request.method == 'POST':
+
+        weekend = request.form.get('weekend')
+
         course = Course(
             id=request.form['course_id'],
             language=request.form['language'],
+            week_days=True if weekend == "False" else False
         )
+        
         course_json = course.to_json()
         if course_json not in data_courses:
             data_courses.append(course_json)
@@ -60,6 +70,7 @@ def manage_courses():
 
 @app.route('/classrooms', methods=['GET', 'POST'])
 def manage_classrooms():
+    load_data()
     if request.method == 'POST':
 
         global available_slots
@@ -85,6 +96,7 @@ def manage_classrooms():
         save_data('classrooms')
         #return redirect(url_for('index'))
     return render_template('classrooms.html')
+    
 
 @app.route('/teachers', methods=['GET', 'POST'])
 def manage_teachers():
@@ -132,47 +144,65 @@ def manage_teachers():
             data_teachers.pop(remove_idx)
                 
         data_teachers.append(teacher)
-        print(data_teachers)
+
         save_data('teachers')
         return redirect(url_for('index'))
     return render_template('teachers.html', courses=data_courses)
 
 @app.route('/students', methods=['GET', 'POST'])
 def manage_students():
-
+    load_data()
     if request.method == 'POST':
 
-        name = request.form['name']
-        lastname = request.form['lastname']
-        courses=request.form.getlist('courses')
-        bonus_constraints = request.form.getlist('other_students[]')
-        print(bonus_constraints)
+        action = request.form.get('action')
 
-        selected_bonuses = [student for student in data_students if str(student) in bonus_constraints]
-        selected_courses = [course for course in data_courses if str(course.id) in courses]
+        if action == 'add_student':
 
-        slots_tmp = []
+            name = request.form['name']
+            lastname = request.form['lastname']
+            courses=request.form.getlist('courses')
+            bonus_constraints = request.form.getlist('other_students[]')
 
-        days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-        for day in days:
-            slots = request.form.getlist(f'availability[{day}][]')
-            for slot in slots:
-                start_time, end_time = slot.split('-')
-                start_hour = start_time.split(':')[0]
-                end_hour = end_time.split(':')[0]
+            selected_bonuses = [student for student in data_students if str(student) in bonus_constraints]
+            selected_courses = [course for course in data_courses if str(course.id) in courses]
 
-                slots_tmp.append(Slot(str(day.lower()), start_hour, end_hour))
+            slots_tmp = []
 
-        student = Student(
-            name=name,
-            lastname=lastname,
-            courses=selected_courses,
-            available_slots=slots_tmp,
-            constraints = selected_bonuses
-        )
+            days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            for day in days:
+                slots = request.form.getlist(f'availability[{day}][]')
+                for slot in slots:
+                    start_time, end_time = slot.split('-')
+                    start_hour = start_time.split(':')[0]
+                    end_hour = end_time.split(':')[0]
 
-        data_students.append(student)
-        save_data('students')
+                    slots_tmp.append(Slot(str(day.lower()), start_hour, end_hour))
+
+            student = Student(
+                name=name,
+                lastname=lastname,
+                courses=selected_courses,
+                available_slots=slots_tmp,
+                constraints = selected_bonuses
+            )
+
+
+            data_students.append(student)
+            save_data('students')
+
+        elif action == 'remove_student':
+
+            students_removal = request.form.getlist('remove_students[]')
+
+            if students_removal:
+                for s in students_removal:
+                    name, lastname = s.split(' ')
+                    data_students[:] = [student for student in data_students 
+                                if not (student.name == name and student.lastname == lastname)]
+
+            save_data('students')
+                    
+
         return redirect(url_for('index'))
     return render_template('students.html', courses=data_courses, students = data_students)
 
