@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <title>TimeTable Application</title>
+    <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body>
-    <h1>TimeTable Application</h1>
-    <ul>
-        <li><a href="{{ url_for('manage_courses') }}">Manage Courses</a></li>
-        <li><a href="{{ url_for('manage_classrooms') }}">Manage Classrooms</a></li>
-        <li><a href="{{ url_for('manage_teachers') }}">Manage Teachers</a></li>
-        <li><a href="{{ url_for('manage_students') }}">Manage Students</a></li>
-        <li><a href="{{ url_for('view_timetable') }}">View Timetable</a></li> 
-    </ul>
+    <div class="container">
+        <h1>Choose what you want to do:</h1>
+        <div class="menu">
+            <a href="{{ url_for('manage_courses') }}">Manage Courses</a>
+            <a href="{{ url_for('manage_classrooms') }}">Manage Classrooms</a>
+            <a href="{{ url_for('manage_teachers') }}">Manage Teachers</a>
+            <a href="{{ url_for('manage_students') }}">Manage Students</a>
+            <a href="{{ url_for('view_timetable') }}">View Timetable</a>
+        </div>
+    </div>
 </body>
 </html>

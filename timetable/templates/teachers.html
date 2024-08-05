@@ -4,69 +4,104 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Teacher</title>
+    <link rel="stylesheet" href="../static/styles.css">
     <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid black;
-            padding: 10px;
-            text-align: center;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        td input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
+        .error {
+            color: red;
+            font-size: 0.9em;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <h1>Add Teacher</h1>
-    <form action="{{ url_for('manage_teachers') }}" method="POST">
-        <label for="name">Teacher Name:</label>
-        <input type="text" id="name" name="name" required><br><br>
+    <div class="container">
+        <h1>Add Teacher</h1>
+        <form id="teacher-form" action="{{ url_for('manage_teachers') }}" method="POST">
+            <label for="name">Teacher Name:</label>
+            <input type="text" id="name" name="name" required><br><br>
 
-        <label for="lastname">Teacher Lastname:</label>
-        <input type="text" id="lastname" name="lastname" required><br><br>
-        
-        <label for="course">Course:</label>
-        <select id="course" name="course" required>
-            {% for course in courses %}
-                <option value="{{ course.id }}">{{ course.language }}</option>
-            {% endfor %}
-        </select><br><br>
-        
-        <table>
-            <thead>
-                <tr>
-                    <th>Day</th>
-                    <th>Available</th>
-                    <th>Time Slots</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
-                    <tr>
-                        <td>{{ day }}</td>
-                        <td>
-                            <input type="checkbox" name="days" value="{{ day }}">
-                        </td>
-                        <td>
-                            <select name="timeslots_{{ day }}" multiple>
-                                {% for slot in ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00'] %}
-                                    <option value="{{ slot }}">{{ slot }}</option>
-                                {% endfor %}
-                            </select>
-                        </td>
-                    </tr>
+            <label for="lastname">Teacher Lastname:</label>
+            <input type="text" id="lastname" name="lastname" required><br><br>
+            
+            <label for="courses">Courses:</label>
+            <div class="courses-checkboxes">
+                {% for course in courses %}
+                    <label>
+                        <input type="checkbox" name="courses[]" value="{{ course.id }}">
+                        {{ course.id }}
+                    </label><br>
                 {% endfor %}
-            </tbody>
-        </table><br>
+            </div>
 
-        <button type="submit">Add Teacher</button>
-    </form>
+            <div class="error" id="courses-error"></div>
+
+            <button type="button" id="select-all">Select All / Deselect All Time Slots</button>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time Slot</th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                        <th>Sunday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for slot in ['07:00-08:00', '08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00', '17:00-18:00', '18:00-19:00', '19:00-20:00', '20:00-21:00', '21:00-22:00', '22:00-23:00', '23:00-24:00'] %}
+                        <tr>
+                            <td>{{ slot }}</td>
+                            {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                                <td>
+                                    <input type="checkbox" name="availability[{{ day }}][]" value="{{ slot }}">
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="error" id="slots-error"></div>
+
+            <button type="submit">Add Teacher</button>
+            <a href="/" class="back-button">Back to Home</a>
+        </form>
+    </div>
+    
+    <script>
+        document.getElementById('select-all').addEventListener('click', function() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+            
+            checkboxes.forEach(checkbox => checkbox.checked = !allChecked);
+        });
+
+        document.getElementById('teacher-form').addEventListener('submit', function(event) {
+            let valid = true;
+            const coursesChecked = document.querySelectorAll('input[name="courses[]"]:checked').length > 0;
+            const slotsChecked = Array.from(document.querySelectorAll('input[name^="availability"]:checked')).length > 0;
+
+            // Clear previous error messages
+            document.getElementById('courses-error').textContent = '';
+            document.getElementById('slots-error').textContent = '';
+
+            if (!coursesChecked) {
+                document.getElementById('courses-error').textContent = 'Please select at least one course.';
+                valid = false;
+            }
+
+            if (!slotsChecked) {
+                document.getElementById('slots-error').textContent = 'Please select at least one time slot.';
+                valid = false;
+            }
+
+            if (!valid) {
+                event.preventDefault(); // Prevent form submission
+            }
+        });
+    </script>
 </body>
 </html>

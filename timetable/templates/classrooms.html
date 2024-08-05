@@ -4,59 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Classroom</title>
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid black;
-            padding: 10px;
-            text-align: center;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        td input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body>
-    <h1>Add Classroom</h1>
-    <form action="{{ url_for('manage_classrooms') }}" method="POST">
-        <label for="name">Classroom Name:</label>
-        <input type="text" id="name" name="name" required><br><br>
-        
-        <table>
-            <thead>
-                <tr>
-                    <th>Time Slot</th>
-                    <th>Monday</th>
-                    <th>Tuesday</th>
-                    <th>Wednesday</th>
-                    <th>Thursday</th>
-                    <th>Friday</th>
-                    <th>Saturday</th>
-                    <th>Sunday</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for slot in ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00'] %}
-                <tr>
-                    <td>{{ slot }}</td>
-                    {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
-                    <td>
-                        <input type="checkbox" name="availability[{{ day }}][]" value="{{ slot }}">
-                    </td>
+    <div class="container">
+        <h1>Add Room</h1>
+        <form action="{{ url_for('manage_classrooms') }}" method="POST">
+            <label for="name">Room Name:</label>
+            <input type="text" id="name" name="name" required>
+            
+            <button type="button" id="select-all">Select All / Deselect</button>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time Slot</th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                        <th>Sunday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for slot in ['07:00-08:00', '08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00', '17:00-18:00', '18:00-19:00', '19:00-20:00', '20:00-21:00', '21:00-22:00', '22:00-23:00', '23:00-24:00'] %}
+                    <tr>
+                        <td>{{ slot }}</td>
+                        {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                        <td>
+                            <input type="checkbox" name="availability[{{ day }}][]" value="{{ slot }}">
+                        </td>
+                        {% endfor %}
+                    </tr>
                     {% endfor %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        
-        <button type="submit">Add Classroom</button>
-    </form>
+                </tbody>
+            </table>
+            
+            <button type="submit">Add Room</button>
+            <a href="/" class="back-button">Back to Home</a>
+        </form>
+    </div>
+    
+    <script>
+            document.getElementById('select-all').addEventListener('click', function() {
+                const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+                
+                checkboxes.forEach(checkbox => checkbox.checked = !allChecked);
+            });
+    </script>
 </body>
 </html>

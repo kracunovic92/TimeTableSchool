@@ -33,7 +33,7 @@ class Student:
             "phone": self.phone,
             "courses": [course.to_dict(exclude_teacher=True) for course in self.courses] if self.courses else None,
             "slots": [slot.to_dict() for slot in self.slots] if self.slots else None,
-            "bonus_constraints": self._bonus_constraints if self._bonus_constraints else None
+            "bonus_constraints": [constraint.to_dict() for constraint in self._bonus_constraints] if self._bonus_constraints else None
         }
 
     @classmethod
@@ -42,7 +42,7 @@ class Student:
         from .Slot import Slot
         courses = [Course.from_dict(course_data) for course_data in data.get('courses')] if data['courses'] else None
         slots = [Slot.from_dict(slot_data) for slot_data in data['slots']] if data['slots'] else None
-        constraints = data.get('bonus_constraints', [])
+        constraints = [Student.from_dict(student_data) for student_data in data['bonus_constraints']] if data['bonus_constraints'] else None
         return cls(data['name'], data['lastname'], data['phone'], courses, slots,constraints)
 
     def to_json(self):
@@ -70,6 +70,10 @@ class Student:
     @property
     def slots(self):
         return self._available_slots
+    @property
+    def bonus(self):
+        return self._bonus_constraints
+    
     
     @courses.setter
     def courses(self, courses_list):

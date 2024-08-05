@@ -1,7 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Form</title>
+    <link rel="stylesheet" href="../static/styles.css"> <!-- Link to your CSS file -->
     <style>
         table {
             width: 100%;
@@ -12,53 +15,80 @@
             padding: 10px;
             text-align: center;
         }
+        select {
+            width: 100%;
+            max-width: 200px;
+        }
     </style>
+    <script>
+        let selectAllState = false;
+
+        function toggleCheckboxes() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = !selectAllState;
+            });
+            selectAllState = !selectAllState;
+            document.getElementById('toggleButton').textContent = selectAllState ? 'Unselect All' : 'Select All';
+        }
+    </script>
 </head>
 <body>
-    <h1>Student Form</h1>
-    <form action="{{ url_for('manage_students') }}" method="POST">
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required><br><br>
+    <div class="container">
+        <h1>Student Form</h1>
+        <form action="{{ url_for('manage_students') }}" method="POST">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required><br><br>
 
-        <label for="lastname">Lastname:</label>
-        <input type="text" id="lastname" name="lastname" required><br><br>
+            <label for="lastname">Lastname:</label>
+            <input type="text" id="lastname" name="lastname" required><br><br>
 
-        <label for="courses">Courses:</label>
-        <select id="courses" name="courses" multiple required>
-            {% for course in courses %}
-                <option value="{{ course.id }}">{{ course.language }}</option>
-            {% endfor %}
-        </select><br><br>
-
-        <h3>Availability</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Day</th>
-                    <th>Available</th>
-                    <th>Time Slots</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
-                    <tr>
-                        <td>{{ day }}</td>
-                        <td>
-                            <input type="checkbox" name="days" value="{{ day }}">
-                        </td>
-                        <td>
-                            <select name="timeslots_{{ day }}" multiple>
-                                {% for slot in ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00'] %}
-                                    <option value="{{ slot }}">{{ slot }}</option>
-                                {% endfor %}
-                            </select>
-                        </td>
-                    </tr>
+            <label for="courses">Courses:</label>
+            <select id="courses" name="courses" multiple required>
+                {% for course in courses %}
+                    <option value="{{ course.id }}">{{ course.language }}</option>
                 {% endfor %}
-            </tbody>
-        </table><br>
+            </select><br><br>
 
-        <button type="submit">Add Student</button>
-    </form>
+            <h3>Availability</h3>
+            <button type="button" id="toggleButton" onclick="toggleCheckboxes()">Select All</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time Slot</th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                        <th>Sunday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for slot in ['07:00-08:00', '08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00', '17:00-18:00', '18:00-19:00', '19:00-20:00', '20:00-21:00', '21:00-22:00', '22:00-23:00', '23:00-24:00'] %}
+                        <tr>
+                            <td>{{ slot }}</td>
+                            {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                                <td>
+                                    <input type="checkbox" name="availability[{{ day }}][]" value="{{ slot }}">
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <h3>Choose who should have class at the same time</h3>
+            <label for="other_students">Select Students:</label>
+            <select id="other_students" name="other_students[]" multiple>
+                {% for student in students %}
+                    <option value="{{student}}">{{ student.name }} {{ student.lastname }}</option>
+                {% endfor %}
+            </select><br><br>
+
+            <button type="submit">Add Student</button>
+        </form>
+    </div>
 </body>
 </html>

@@ -3,13 +3,14 @@ from .Student import Student
 
 class Course:
 
-    def __init__(self,language,id, students = [], teacher = []):
+    def __init__(self,language,id, students = [], teacher = [], week_days = True):
 
         self._language = language
         self._id = id
         self._students = students
         self._teacher = teacher
         self._time_slot = None
+        self._week_days = week_days
 
     def __eq__(self, other):
 
@@ -71,6 +72,14 @@ class Course:
     @property
     def time_slot(self):
         return self._time_slot
+    
+    @property
+    def week_days(self):
+        return self._week_days
+    
+    @week_days.setter
+    def week_day(self, day):
+        self._week_days = day
     
     @language.setter
     def language(self, lan):

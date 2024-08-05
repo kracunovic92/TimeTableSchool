@@ -52,7 +52,7 @@ class Slot:
     def check_day(self,day):
 
         const_day = day.lower()
-        list_days = ["monday", "tuesday","wednesday",'thursday','friday','saturday']
+        list_days = ["monday", "tuesday","wednesday",'thursday','friday','saturday', 'sunday']
 
         if const_day not in list_days:
             raise ValueError(f"This day doesnt exist {day}")
