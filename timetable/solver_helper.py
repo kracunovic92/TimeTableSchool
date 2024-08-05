@@ -15,19 +15,17 @@ def load_from_json(path, filename, class_type):
     return res
 
 def run_solver():
-    load_dotenv()
-    # path = os.getenv('TIMETABLE_INPUT')
+
+
     path = os.getcwd()
-    # path = os.getenv('DATA_EXAMPLE_PATH')
-    # path = path  + '/data_set_1'
     students = load_from_json(path, 'students.json', Student)
     teachers = load_from_json(path, 'teachers.json', Teacher)
     rooms = load_from_json(path, 'classrooms.json', Room)
     courses = load_from_json(path, 'courses.json', Course)
 
     tt = TimeTable(students, teachers, rooms, courses)
-    model = cp_model.CpModel()
 
-    timetable = tt.find_all_solutions()
+    solutions = tt.find_all_solutions()
 
-    return timetable
+
+    return solutions

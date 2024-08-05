@@ -17,6 +17,13 @@ class TimeTable:
         self.solver = None
         self.solutions = []
 
+    def add_bonus_constraints(self, model):
+
+        for student in self.students:
+            for name in student.bonus:
+
+                if name in self.students:
+                    print(f"Exist for new constraint {name}")
 
     def add_solution(self, solver):
         classes = []
@@ -94,11 +101,40 @@ class TimeTable:
                     self.course_var_map[(course, room, slot)]
                     for course in self.courses
                 )
-        # At least one course per week
+        #At least one course per week
         for course in self.courses:
-            model.AddBoolOr(self.course_var_map[(course,room,slot)]
-                            for room in self.classrooms for slot in room.slots)
-            
+            print(f"THIS IS COURSE : {course}")
+
+
+            weekend = [self.course_var_map[(course, room, slot)] for room in self.classrooms for slot in room.slots if slot.day  in ['saturday','sunday']]
+            weekdays = [self.course_var_map[(course, room, slot)]for room in self.classrooms for slot in room.slots if slot.day not in ['saturday', 'sunday'] ]
+            if   not course.week_day:
+                model.AddExactlyOne(self.course_var_map[(course, room, slot)] for room in self.classrooms for slot in room.slots)
+                model.AddAtMostOne(weekend)
+            else:
+                days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']
+                # Create indicator variables for each day
+                day_indicators = {}
+                for day in days:
+                    day_indicators[(course, day)] = model.NewBoolVar(f'{course}_{day}_indicator')
+
+                # Ensure exactly two of these indicators are true
+                model.Add(cp_model.LinearExpr.Sum([day_indicators[(course, day)] for day in days]) == 2)
+
+                for day in days:
+                    # Gather all the possible course variables for the given day
+                    course_var_for_day = [self.course_var_map[(course, room, slot)]
+                                        for room in self.classrooms
+                                        for slot in room.slots if slot.day == day]
+                    print(course_var_for_day)
+                    print("============================")
+                    # Ensure that if the indicator is true, at least one course variable for that day is true
+                    model.AddBoolOr(course_var_for_day).OnlyEnforceIf(day_indicators[(course, day)])
+                    # Ensure that if the indicator is false, none of the course variables for that day are true
+                    for var in course_var_for_day:
+                        model.Add(var == 0).OnlyEnforceIf(day_indicators[(course, day)].Not())
+
+                
     def add_base_teacher_constraints(self,model):
         # At most one course per teacher per slot
         for teacher in self.teachers:
@@ -107,13 +143,13 @@ class TimeTable:
                     self.teacher_var_map[(teacher, course, slot)]
                     for course in teacher.courses
                 )
-        # At least one slot per teacher per course
-        for teacher in self.teachers:
-            for course in teacher.courses:
-                model.AddAtMostOne(
-                    self.teacher_var_map[(teacher,course,slot)]
-                    for slot in teacher.slots
-                )
+        # #At least one slot per teacher per course
+        # for teacher in self.teachers:
+        #     for course in teacher.courses:
+        #         model.AddAtMostOne(
+        #             self.teacher_var_map[(teacher,course,slot)]
+        #             for slot in teacher.slots
+        #         )
         #If teacher can teach course in given time slot,
         #then course must exist in room
         for teacher,course,slot in self.teacher_var_map.keys():        
@@ -121,7 +157,7 @@ class TimeTable:
             model.Add(
                 self.teacher_var_map[(teacher, course, slot)] <= cp_model.LinearExpr.Sum(course_room_vars)
             )
-        #If room exist teacher must be able to teach
+        # #If room exist teacher must be able to teach
         for course,room,slot in self.course_var_map.keys():
             teacher_vars = [self.teacher_var_map[(teacher,course,slot)] for teacher in self.teachers if(teacher,course,slot) in self.teacher_var_map]
             model.Add(
@@ -186,7 +222,7 @@ class TimeTable:
 
         for r,v in rooms.items():
             rm_list.append(v)
-
+        print("added minimization process")
         model.Minimize(sum(rm_list)) 
     
     def add_optimal_number_of_students(self, model):
@@ -239,29 +275,41 @@ class TimeTable:
         self.add_optimal_number_of_rooms(model)
         #self.add_optimal_number_of_students(model)
 
-
+        print(f' base_constraints_status {base_constrains_status}')
+        print(f'other constraint_status {other_constraints_status}')
         if base_constrains_status and other_constraints_status:
 
             status = solver.Solve(model)
+            print("Status")
+            print(status)
+            print(cp_model.OPTIMAL)
+            print(cp_model.INFEASIBLE)
             i = 1
-            while status == cp_model.OPTIMAL and i < self.max_solutions:
-             
-
+            while (status == cp_model.OPTIMAL or status == cp_model.FEASIBLE) and i < self.max_solutions:
+                
+                print(f"SOLUTION {i}")
                 i += 1
                 self.exclude_current_solution(model,solver)
                 status = solver.Solve(model)
                 self.add_solution(solver)
-                #self.print_classes(solver)
+                self.print_classes(solver)
 
         return self.solutions
     
     def add_other_constraints(self,model,solver):
         constraints = []
-        constraints.append(self.add_coures_constraints)
+        #constraints.append(self.add_coures_constraints)
         constraints.append(self.add_teacher_constraints)
-        for const_function in constraints:
+        for i, const_function in enumerate(constraints):
+            print(f"New CONSTRAINT {i}")
             const_function(model)
-
+            status = solver.Solve(model)
+            if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+                print("Basic constraints added")
+            else:
+                print("Some misstake with basic constraints")
+                return False
+        self.model = model
         return True
 
     def add_base_constraints(self, model, solver):
@@ -271,6 +319,7 @@ class TimeTable:
         base_constraints.append(self.add_base_student_constraints)
         
         for i, const_function in enumerate(base_constraints):
+            print(f"BASE CONSTRAINT {i}")
             const_function(model)
             status = solver.Solve(model)
             if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
@@ -315,6 +364,7 @@ class TimeTable:
                             if solver.value(s2) == 1 and slot == s[2] and course == s[1]:
                                 print('\t\t '+str(s[0]))
                 print('---------------------------------')
+            
 
                         
     def solve_with_incremental_constraints(self):
