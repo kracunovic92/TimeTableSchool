@@ -4,15 +4,6 @@
     <meta charset="UTF-8">
     <title>TimeTable Application</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script>
-        function pingServer() {
-            fetch('/ping', { method: 'POST' })
-                .then(response => console.log('Pinged server'))
-                .catch(error => console.error('Error pinging server:', error));
-        }
-
-        setInterval(pingServer, 5000);  // Ping every 5 seconds
-    </script>
 </head>
 <body>
     <div class="container">

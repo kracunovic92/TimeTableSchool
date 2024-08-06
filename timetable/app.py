@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import json
 import os
+import sys
 import signal
 import time
 import threading
@@ -16,6 +17,12 @@ data_students = []
 data_teachers = []
 data_classrooms = []
 
+
+# Function to delete .json files
+def delete_json_files(directory):
+    for filename in os.listdir(directory):
+        if filename.endswith(".json"):
+            os.remove(os.path.join(directory, filename))
 
 def load_data():
     if os.path.exists('courses.json'):
@@ -43,7 +50,7 @@ def load_data():
                 data = json.load(f)
                 data_students = [Student.from_json(i) for i in data]
 
-load_data()
+delete_json_files('../timetable')
 
 @app.route('/')
 def index():
