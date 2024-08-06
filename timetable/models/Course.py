@@ -33,7 +33,8 @@ class Course:
             "id" : self.id,
             "students":[s.to_dict() for s in self.students] if self.students else None,
             "teacher": self.teacher.to_dict() if self.teacher and not exclude_teacher  else None,
-            "slots": [s.to_dict() for s in self.time_slot] if self.time_slot else None
+            "slots": [s.to_dict() for s in self.time_slot] if self.time_slot else None,
+            "weekends" : False if self.week_days == True else True
         }
     
     @classmethod

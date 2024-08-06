@@ -9,9 +9,11 @@ from TimeTable import TimeTable
 def load_from_json(path, filename, class_type):
     path = os.path.join(path, filename)
     res = []
-    with open(path, 'r') as f:
-        data = json.load(f)
-        res = [class_type.from_json(i) for i in data]
+    if os.path.exists(path):
+        if os.path.getsize(path) != 0:
+            with open(path, 'r') as f:
+                data = json.load(f)
+                res = [class_type.from_json(i) for i in data]
     return res
 
 def run_solver():
