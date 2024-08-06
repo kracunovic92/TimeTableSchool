@@ -1,9 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import json
 import os
+import signal
+import time
+import threading
+import requests
 
 app = Flask(__name__)
-print(os.getcwd())
 
 from models import Course, Room, Teacher, Student, Slot
 from solver_helper import run_solver, load_from_json
@@ -13,7 +16,6 @@ data_students = []
 data_teachers = []
 data_classrooms = []
 
-    
 
 def load_data():
     if os.path.exists('courses.json'):
@@ -210,7 +212,7 @@ def manage_students():
 def view_timetable():
     solutions = run_solver()
     return render_template('timetable.html', solutions=solutions)
-   
+
 
 def save_data(data_type):
     with open(f'{data_type}.json', 'w') as f:
@@ -222,6 +224,3 @@ def save_data(data_type):
             json.dump(data_students, f, indent=4, default=Student.to_json)
         else:
             json.dump(data_classrooms, f, indent=4, default=Room.to_json)
-
-if __name__ == '__main__':
-    app.run(debug=True)
