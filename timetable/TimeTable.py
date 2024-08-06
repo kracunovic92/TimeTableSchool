@@ -210,10 +210,23 @@ class TimeTable:
     def add_coures_constraints(self, model):
         
         for student in self.students:
-            for course  in student.courses:
-                model.AddAtMostOne(
-                    [self.student_var_map[(student,course,slot)] for slot in student.slots]
-                )
+            for other in student.bonus:
+                for slot in student.slots:
+                    student_in_slot = [
+                        self.student_var_map[(student, course, slot)]
+                        for course in student.courses
+                    ]
+                    other_student_in_slot = [
+                        self.student_var_map[(other, other_course, slot)]
+                        for other_course in other.courses
+                    ]
+
+                    # If student attends a class in this slot, other_student must attend a class in this slot
+                    model.AddBoolOr([var.Not() for var in student_in_slot] + other_student_in_slot)
+
+                    # If other_student attends a class in this slot, student must attend a class in this slot
+                    model.AddBoolOr([var.Not() for var in other_student_in_slot] + student_in_slot)
+
 
     def add_optimal_number_of_rooms(self, model):
 
@@ -298,7 +311,7 @@ class TimeTable:
     
     def add_other_constraints(self,model,solver):
         constraints = []
-        #constraints.append(self.add_coures_constraints)
+        constraints.append(self.add_coures_constraints)
         constraints.append(self.add_teacher_constraints)
         for i, const_function in enumerate(constraints):
             print(f"New CONSTRAINT {i}")
