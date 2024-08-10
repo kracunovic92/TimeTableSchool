@@ -5,3 +5,5 @@ __pycache__
 poetry.lock
 .hypothesis
 build
+app.spec
+run_app.spec

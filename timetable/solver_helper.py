@@ -19,7 +19,8 @@ def load_from_json(path, filename, class_type):
 def run_solver():
 
 
-    path = os.getcwd()
+    path =os.path.join(os.getcwd(),'data')
+    print(path)
     students = load_from_json(path, 'students.json', Student)
     teachers = load_from_json(path, 'teachers.json', Teacher)
     rooms = load_from_json(path, 'classrooms.json', Room)

@@ -2,15 +2,22 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 import json
 import os
 import sys
-import signal
-import time
-import threading
-import requests
 
-app = Flask(__name__)
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+
+    return os.path.join(os.path.abspath("."), relative_path)
+
+app = Flask(__name__, template_folder=resource_path('templates'), static_folder=resource_path('static'))
+
+if getattr(sys, 'frozen', False):
+    print("Some frozen shit")
+    os.chdir(sys._MEIPASS)
 
 from models import Course, Room, Teacher, Student, Slot
-from solver_helper import run_solver, load_from_json
+from solver_helper import run_solver
 
 data_courses = []
 data_students = []
@@ -25,34 +32,40 @@ def delete_json_files(directory):
             os.remove(os.path.join(directory, filename))
 
 def load_data():
-    if os.path.exists('courses.json'):
-        if os.path.getsize('courses.json') != 0:
-            with open('courses.json', 'r') as f:
-                global data_courses
-                data = json.load(f)
-                data_courses = [Course.from_json(i) for i in data]
-    if os.path.exists('classrooms.json'):
-        if os.path.getsize('classrooms.json') != 0:
-            with open('classrooms.json', 'r') as f:
-                global data_classrooms
-                data = json.load(f)
-                data_classrooms = [Room.from_json(i) for i in data]
-    if os.path.exists('teachers.json'):
-        if os.path.getsize('teachers.json') != 0:
-            with open('teachers.json', 'r') as f:
-                global data_teachers
-                data = json.load(f)
-                data_teachers = [Teacher.from_json(i) for i in data]
-    if os.path.exists('students.json'):
-        if os.path.getsize('students.json') != 0:
-            with open('students.json', 'r') as f:
-                global data_students
-                data = json.load(f)
-                data_students = [Student.from_json(i) for i in data]
+    directory = resource_path('data')
 
-delete_json_files('../timetable')
+    courses_path = os.path.join(directory, 'courses.json')
+    classrooms_path = os.path.join(directory, 'classrooms.json')
+    teachers_path = os.path.join(directory, 'teachers.json')
+    students_path = os.path.join(directory, 'students.json')
 
-@app.route('/')
+    if os.path.exists(courses_path) and os.path.getsize(courses_path) != 0:
+        with open(courses_path, 'r') as f:
+            global data_courses
+            data = json.load(f)
+            data_courses = [Course.from_json(i) for i in data]
+
+    if os.path.exists(classrooms_path) and os.path.getsize(classrooms_path) != 0:
+        with open(classrooms_path, 'r') as f:
+            global data_classrooms
+            data = json.load(f)
+            data_classrooms = [Room.from_json(i) for i in data]
+
+    if os.path.exists(teachers_path) and os.path.getsize(teachers_path) != 0:
+        with open(teachers_path, 'r') as f:
+            global data_teachers
+            data = json.load(f)
+            data_teachers = [Teacher.from_json(i) for i in data]
+
+    if os.path.exists(students_path) and os.path.getsize(students_path) != 0:
+        with open(students_path, 'r') as f:
+            global data_students
+            data = json.load(f)
+            data_students = [Student.from_json(i) for i in data]
+
+#delete_json_files(resource_path('.'))
+
+@app.route('/', methods = ['GET','POST'])
 def index():
     return render_template('index.html')
 
@@ -215,16 +228,22 @@ def manage_students():
         return redirect(url_for('index'))
     return render_template('students.html', courses=data_courses, students = data_students)
 
-@app.route('/view_timetable')
+@app.route('/view_timetable', methods=['GET', 'POST'])
 def view_timetable():
     solutions = run_solver()
     return render_template('timetable.html', solutions=solutions)
 
 
 def save_data(data_type):
-    with open(f'{data_type}.json', 'w') as f:
+    directory = resource_path('data')
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    
+    file_path = os.path.join(directory, f'{data_type}.json')
+
+    with open(file_path, 'w') as f:
         if data_type == "courses":
-            json.dump(data_courses, f, indent=4,default=Course.to_json)
+            json.dump(data_courses, f, indent=4, default=Course.to_json)
         elif data_type == "teachers":
             json.dump(data_teachers, f, indent=4, default=Teacher.to_json)
         elif data_type == "students":
