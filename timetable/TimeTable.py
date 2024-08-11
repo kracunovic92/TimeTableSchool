@@ -363,18 +363,18 @@ class TimeTable:
     def print_classes(self, solver):
         for var,variable in self.course_var_map.items():
 
-            if solver.value(variable) == 1:
+            if solver.Value(variable) == 1:
                 course = var[0]
                 slot = var[2]
                 print(str(course) + "  " + str(slot))
 
                 for  t,t2  in self.teacher_var_map.items():
 
-                    if solver.value(t2) == 1 and slot == t[2] and course == t[1]:
+                    if solver.Value(t2) == 1 and slot == t[2] and course == t[1]:
                         print('\t'+str(t[0]))
                 
                         for s,s2 in self.student_var_map.items():
-                            if solver.value(s2) == 1 and slot == s[2] and course == s[1]:
+                            if solver.Value(s2) == 1 and slot == s[2] and course == s[1]:
                                 print('\t\t '+str(s[0]))
                 print('---------------------------------')
             
@@ -413,15 +413,15 @@ class TimeTable:
                     # Add printed solution
                 for var, variable in self.course_var_map.items():
 
-                    if solver.value(variable) == 1:
+                    if solver.Value(variable) == 1:
                         print(var)
                 print('Teachers')
                 for var, variable in self.teacher_var_map.items():
-                    if solver.value(variable) == 1:
+                    if solver.Value(variable) == 1:
                         print(var)
                 print('Students')
                 for var, variable in self.student_var_map.items():
-                    if solver.value(variable) == 1:
+                    if solver.Value(variable) == 1:
                         print(var)
                     best_solution = solver
                 print("Solution with basic constraints exists")
@@ -439,15 +439,15 @@ class TimeTable:
                 # Add printed solution
                 for var, variable in self.course_var_map.items():
 
-                    if solver.value(variable) == 1:
+                    if solver.Value(variable) == 1:
                         print(var)
                 print('Teachers')
                 for var, variable in self.teacher_var_map.items():
-                    if solver.value(variable) == 1:
+                    if solver.Value(variable) == 1:
                         print(var)
                 print('Students')
                 for var, variable in self.student_var_map.items():
-                    if solver.value(variable) == 1:
+                    if solver.Value(variable) == 1:
                         print(var)
             else:
                 print(f'Solution doesnt exist {const_funct} :')

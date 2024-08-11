@@ -4,6 +4,29 @@
     <meta charset="UTF-8">
     <title>TimeTable Application</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <style>
+        .delete-json {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .delete-button {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .delete-button:hover {
+            background-color: #ff1a1a;
+        }
+        .delete-button:active {
+            background-color: #e60000;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -14,6 +37,11 @@
             <a href="{{ url_for('manage_teachers') }}">Manage Teachers</a>
             <a href="{{ url_for('manage_students') }}">Manage Students</a>
             <a href="{{ url_for('view_timetable') }}">View Timetable</a>
+        </div>
+        <div class="delete-json">
+            <form method="POST" action="{{ url_for('delete_json') }}">
+                <button type="submit" class="delete-button">Delete All Files</button>
+            </form>
         </div>
     </div>
 </body>

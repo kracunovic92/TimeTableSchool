@@ -34,7 +34,7 @@ class Course:
             "students":[s.to_dict() for s in self.students] if self.students else None,
             "teacher": self.teacher.to_dict() if self.teacher and not exclude_teacher  else None,
             "slots": [s.to_dict() for s in self.time_slot] if self.time_slot else None,
-            "weekends" : False if self.week_days == True else True
+            "weekdays" : self.week_days
         }
     
     @classmethod
@@ -44,8 +44,7 @@ class Course:
         from .Slot import Slot
         students = [Student.from_dict(student_data) for student_data in data['students']] if data['students'] else None
         teacher = Teacher.from_dict(data['teacher']) if data.get('teacher') else None
-
-        return cls(data['language'],data['id'],students,teacher)
+        return cls(data['language'],data['id'],students,teacher, data['weekdays'])
     
     def to_json(self):
         return json.dumps(self.to_dict())

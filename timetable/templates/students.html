@@ -57,7 +57,7 @@
             <label for="courses">Courses:</label>
             <select id="courses" name="courses" multiple required>
                 {% for course in courses %}
-                    <option value="{{ course.id }}">{{ course.language }}</option>
+                    <option value="{{ course.id }}">{{ course.id }}</option>
                 {% endfor %}
             </select><br><br>
 

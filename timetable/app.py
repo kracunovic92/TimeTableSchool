@@ -4,7 +4,6 @@ import os
 import sys
 
 def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative_path)
 
@@ -13,7 +12,6 @@ def resource_path(relative_path):
 app = Flask(__name__, template_folder=resource_path('templates'), static_folder=resource_path('static'))
 
 if getattr(sys, 'frozen', False):
-    print("Some frozen shit")
     os.chdir(sys._MEIPASS)
 
 from models import Course, Room, Teacher, Student, Slot
@@ -25,11 +23,11 @@ data_teachers = []
 data_classrooms = []
 
 
-# Function to delete .json files
 def delete_json_files(directory):
-    for filename in os.listdir(directory):
-        if filename.endswith(".json"):
-            os.remove(os.path.join(directory, filename))
+    if(os.path.exists(directory)):
+        for filename in os.listdir(directory):
+            if filename.endswith(".json"):
+                os.remove(os.path.join(directory, filename))
 
 def load_data():
     directory = resource_path('data')
@@ -63,11 +61,16 @@ def load_data():
             data = json.load(f)
             data_students = [Student.from_json(i) for i in data]
 
-#delete_json_files(resource_path('.'))
+# delete_json_files(resource_path('data'))
 
 @app.route('/', methods = ['GET','POST'])
 def index():
     return render_template('index.html')
+
+@app.route('/delete-json', methods=['POST'])
+def delete_json():
+    delete_json_files(resource_path('data'))
+    return redirect(url_for('index')) 
 
 @app.route('/courses', methods=['GET', 'POST'])
 def manage_courses():
@@ -75,7 +78,8 @@ def manage_courses():
 
     if request.method == 'POST':
 
-        weekend = request.form.get('weekend')
+        weekend = request.form.get('weekends')
+        print(f'Chosen option for wknd : {weekend}')
 
         course = Course(
             id=request.form['course_id'],
@@ -83,9 +87,8 @@ def manage_courses():
             week_days=True if weekend == "False" else False
         )
         
-        course_json = course.to_json()
-        if course_json not in data_courses:
-            data_courses.append(course_json)
+        
+        data_courses.append(course)
         save_data('courses')
         #return redirect(url_for('index'))
     return render_template('courses.html')
@@ -100,7 +103,6 @@ def manage_classrooms():
 
         days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
         for day in days:
-            # Get all time slots for the specific day
             slots = request.form.getlist(f'availability[{day}][]')
             for slot in slots:
                 start_time, end_time = slot.split('-')
@@ -139,7 +141,6 @@ def manage_teachers():
 
         days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
         for day in days:
-            # Get all time slots for the specific day
             slots = request.form.getlist(f'availability[{day}][]')
             for slot in slots:
                 start_time, end_time = slot.split('-')

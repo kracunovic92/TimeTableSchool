@@ -48,6 +48,7 @@
             margin: 5px 0;
             padding: 10px;
             border-radius: 4px;
+            position: relative; /* Added for positioning student list */
         }
         .slot-course {
             font-weight: bold;
@@ -55,7 +56,41 @@
         .slot-details {
             margin-top: 5px;
         }
+        .slot .student-list {
+            display: none; /* Initially hidden */
+            background: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            position: absolute;
+            z-index: 10;
+        }
+        .slot:active .student-list { /* Show on click */
+            display: block;
+        }
+        .student-list.visible {
+            display: block;
+        }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const slots = document.querySelectorAll('.slot');
+
+            slots.forEach(slot => {
+                slot.addEventListener('click', function(event) {
+                    event.stopPropagation(); // Prevent closing when clicking inside the slot
+                    this.querySelector('.student-list').classList.toggle('visible');
+                });
+            });
+
+            // Close student list when clicking outside
+            document.addEventListener('click', function(event) {
+                slots.forEach(slot => {
+                    slot.querySelector('.student-list').classList.remove('visible');
+                });
+            });
+        });
+    </script>
 </head>
 <body>
     <div class="container">
@@ -72,15 +107,18 @@
                                     {% for classroom in solution %}
                                         {% if classroom['slot'].start_time == slot and classroom['slot'].day == day %}
                                             <div class="slot">
-                                                <div class="slot-course">{{ classroom['course']['language'] }} ({{ classroom['course']['id'] }}) {{ classroom['slot'].start_time}} - {{classroom['slot'].end_time}}</div>
-                                               <div class="slot-details">
+                                                <div class="slot-course">{{ classroom['course']['language'] }} ({{ classroom['course']['id'] }}) {{ classroom['slot'].start_time }} - {{ classroom['slot'].end_time }}</div>
+                                                <div class="slot-details">
                                                     Room: {{ classroom['room']['id'] }}<br>
                                                     Teacher: {{ classroom['teacher']['name'] if classroom['teacher'] else 'N/A' }}<br>
-                                                    Students: 
+                                                </div>
+                                                <!-- Student List (Initially hidden) -->
+                                                <div class="student-list">
+                                                    <strong>Students:</strong><br>
                                                     {% for student in classroom['students'] %}
-                                                        {{ student['name'] }}{% if not loop.last %}, {% endif %}
+                                                        {{ student['name'] }}{% if not loop.last %}, {% endif %}<br>
                                                     {% endfor %}
-                                                </div> 
+                                                </div>
                                             </div>
                                         {% endif %}
                                     {% endfor %}
