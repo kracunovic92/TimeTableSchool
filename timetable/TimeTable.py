@@ -168,11 +168,11 @@ class TimeTable:
 
         # Ensure that each student goes to at least one class
         for student in self.students:
-            model.Add(
-                sum(self.student_var_map[(student,course,slot)]
-                    for course in student.courses
-                    for slot in student.slots) >=1
-            )
+            for course in student.courses:
+                model.Add(
+                    sum(self.student_var_map[(student,course,slot)]
+                        for slot in student.slots) >=1
+                )
         # Ensure that each student goes visit HIS courses at least one a week
         for student in self.students:
             for course in student.courses:
@@ -180,6 +180,19 @@ class TimeTable:
                     self.student_var_map[(student,course,slot)]
                     for slot in student.slots
                 )
+        for student in self.students:
+            for course in student.courses:
+                if course.week_days:
+                    model.Add(
+                        sum(self.student_var_map[(student, course, slot)] 
+                            for slot in student.slots) == 2
+                    )
+                else:
+                    model.Add(
+                        sum(self.student_var_map[(student, course, slot)] 
+                            for slot in student.slots) == 1
+                    )
+
         # Ensure that each student can attend exactly one course at the time
         for student in self.students:
             for slot in student.slots:
