@@ -68,9 +68,14 @@ class TimeTable:
         for course in courses:
             for room in rooms:
                 for slot in room.slots:
-                    course_var_map[(course,room,slot)] = model.NewBoolVar(
-                        f'{course}_{room}_{slot}'
-                    )
+                    if course.week_days and slot.day in ["monday", "tuesday","wednesday",'thursday','friday']:
+                        course_var_map[(course,room,slot)] = model.NewBoolVar(
+                            f'{course}_{room}_{slot}'
+                        )
+                    if not course.week_days and slot.day in ['saturday', 'sunday']:
+                        course_var_map[(course,room,slot)] = model.NewBoolVar(
+                            f'{course}_{room}_{slot}'
+                        )
 
         # Group teachers, courses, slots:
         for teacher in teachers:
@@ -99,18 +104,16 @@ class TimeTable:
             for slot in room.slots:
                 model.AddAtMostOne(
                     self.course_var_map[(course, room, slot)]
-                    for course in self.courses
+                    for course in self.courses if (course,room,slot) in self.course_var_map
                 )
         #At least one course per week
         for course in self.courses:
             print(f"THIS IS COURSE : {course}")
-
-
-            weekend = [self.course_var_map[(course, room, slot)] for room in self.classrooms for slot in room.slots if slot.day  in ['saturday','sunday']]
-            weekdays = [self.course_var_map[(course, room, slot)]for room in self.classrooms for slot in room.slots if slot.day not in ['saturday', 'sunday'] ]
+            weekend = [self.course_var_map[(course, room, slot)] for room in self.classrooms for slot in room.slots if (slot.day  in ['saturday','sunday'] and (course,room,slot) in self.course_var_map)]
+            weekdays = [self.course_var_map[(course, room, slot)]for room in self.classrooms for slot in room.slots if (slot.day not in ['saturday', 'sunday'] and (course,room,slot) in self.course_var_map)]
             if   not course.week_day:
-                model.AddExactlyOne(self.course_var_map[(course, room, slot)] for room in self.classrooms for slot in room.slots)
-                model.AddAtMostOne(weekend)
+                model.AddExactlyOne(weekend)
+                #model.Add(sum(weekend) == 1)
             else:
                 days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']
                 # Create indicator variables for each day
@@ -174,20 +177,23 @@ class TimeTable:
                         for slot in student.slots) >=1
                 )
         # Ensure that each student goes visit HIS courses at least one a week
+        # for student in self.students:
+        #     for course in student.courses:
+        #         model.AddBoolOr(
+        #             self.student_var_map[(student,course,slot)]
+        #             for slot in student.slots
+        #         )
         for student in self.students:
             for course in student.courses:
-                model.AddBoolOr(
-                    self.student_var_map[(student,course,slot)]
-                    for slot in student.slots
-                )
-        for student in self.students:
-            for course in student.courses:
+                print(f"this is course: {course} and {course.week_days}")
                 if course.week_days:
+                    print("Adding for week days")
                     model.Add(
                         sum(self.student_var_map[(student, course, slot)] 
                             for slot in student.slots) == 2
                     )
                 else:
+                    print(f'Adding for weekend {course}')
                     model.Add(
                         sum(self.student_var_map[(student, course, slot)] 
                             for slot in student.slots) == 1

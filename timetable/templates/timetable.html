@@ -116,7 +116,7 @@
                                                 <div class="student-list">
                                                     <strong>Students:</strong><br>
                                                     {% for student in classroom['students'] %}
-                                                        {{ student['name'] }}{% if not loop.last %}, {% endif %}<br>
+                                                        {{ student['name'] }} {{student['lastname']}}{% if not loop.last %}, {% endif %}<br>
                                                     {% endfor %}
                                                 </div>
                                             </div>

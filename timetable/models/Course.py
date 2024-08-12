@@ -44,6 +44,7 @@ class Course:
         from .Slot import Slot
         students = [Student.from_dict(student_data) for student_data in data['students']] if data['students'] else None
         teacher = Teacher.from_dict(data['teacher']) if data.get('teacher') else None
+        print(data['weekdays'])
         return cls(data['language'],data['id'],students,teacher, data['weekdays'])
     
     def to_json(self):
