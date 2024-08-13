@@ -58,10 +58,11 @@ class TimeTable:
         # Group students, courses and slots:
         for student in students:
             for course in student.courses:
-                    for slot in student.slots:
-                        student_var_map[(student,course,slot)] = model.NewBoolVar(
-                            f'{student}_{course}_{slot}'
-                        )
+                    for group in course.groups:
+                        for slot in student.slots:
+                            student_var_map[(student,course,group,slot)] = model.NewBoolVar(
+                                f'{student}_{course}_{group}_{slot}'
+                            )
           
         
         self.groups_var_map = groups_var_map
@@ -138,109 +139,131 @@ class TimeTable:
 
     def add_base_student_constraints(self,model):
 
-
         for student in self.students:
             for course in student.courses:
-                print(f"this is course: {course} and {course.week_days}")
+                group_vars = []
+                for group in course.groups:
+                    for slot in student.slots:
+                        if (student, course, group, slot) in self.student_var_map:
+                            group_var = self.student_var_map[(student, course, group, slot)]
+                            if group_var not in group_vars:
+                                group_vars.append(group_var)
+                
+                # Ensure exactly one group per course for each student
+                model.AddExactlyOne(group_vars)
                 if course.week_days:
-                    print("Adding for week days")
-                    model.Add(
-                        sum(self.student_var_map[(student, course, slot)] 
-                            for slot in student.slots) == 2
-                    )
+                # For courses on weekdays, select exactly two slots
+                    for group in course.groups:
+                        slot_vars = [
+                            self.student_var_map[(student, course, group, slot)]
+                            for slot in student.slots
+                            if (student, course, group, slot) in self.student_var_map
+                        ]
+                        model.Add(sum(slot_vars) == 2)
                 else:
-                    print(f'Adding for weekend {course}')
-                    model.Add(
-                        sum(self.student_var_map[(student, course, slot)] 
-                            for slot in student.slots) == 1
-                    )
+                    # For courses on weekends, select exactly one slot
+                    for group in course.groups:
+                        slot_vars = [
+                            self.student_var_map[(student, course, group, slot)]
+                            for slot in student.slots
+                            if (student, course, group, slot) in self.student_var_map
+                        ]
+                        model.Add(sum(slot_vars) == 1)
 
-        # Ensure that each student can attend exactly one course at the time
+
+        # Constraint: Ensure that each student can attend exactly one course at a time
         for student in self.students:
             for slot in student.slots:
-                model.AddAtMostOne(self.student_var_map[student,course,slot]
-                                   for course in  student.courses)
+                model.AddAtMostOne(
+                    self.student_var_map[(student, course, group, slot)]
+                    for course in student.courses
+                    for group in course.groups
+                    if (student, course, group, slot) in self.student_var_map if (student,course,group,slot) in self.student_var_map
+                )
         
-        # 
-        for (course,room,slot) in self.course_var_map.keys():
 
-            student_var = [self.student_var_map[(student,course,slot)] for student in self.students if(student,course,slot) in self.student_var_map]
+        # Ensure consistency between student attendance and course availability in rooms
+        for (course, group, room, slot) in self.groups_var_map.keys():
+            student_vars = [
+                self.student_var_map[(student, course, group, slot)]
+                for student in self.students
+                if (student, course, group, slot) in self.student_var_map
+            ]
             model.Add(
-                self.course_var_map[(course,room,slot)] <= cp_model.LinearExpr.Sum(student_var)
+                self.groups_var_map[(course, group, room, slot)] <= cp_model.LinearExpr.Sum(student_vars)
             )
-        for (student,course,slot) in self.student_var_map.keys():
 
-            course_var = [self.course_var_map[(course,room,slot)] for room in self.classrooms if (course,room,slot) in self.course_var_map]
+        for (student, course, group, slot) in self.student_var_map.keys():
+            course_vars = [
+                self.groups_var_map[(course, group, room, slot)]
+                for room in self.classrooms
+                if (course, group, room, slot) in self.groups_var_map
+            ]
             model.Add(
-                self.student_var_map[(student,course,slot)] <= cp_model.LinearExpr.Sum(course_var)
+                self.student_var_map[(student, course, group, slot)] <= cp_model.LinearExpr.Sum(course_vars)
             )
             
     def add_teacher_constraints(self, model):
         
         # Teacher should teach only if students can come to course
-        for teacher,course,slot in self.teacher_var_map.keys():
-            students = [self.student_var_map[(s,course,slot)] for s in self.students if (s,course,slot) in self.student_var_map]
-            model.Add(self.teacher_var_map[(teacher,course,slot)] <= (cp_model.LinearExpr.Sum(students)))
+        for teacher,course,group,slot in self.teacher_var_map.keys():
+            students = [self.student_var_map[(s,course,group, slot)] for s in self.students if (s,course,group,slot) in self.student_var_map]
+            model.Add(self.teacher_var_map[(teacher,course,group, slot)] <= (cp_model.LinearExpr.Sum(students)))
 
     def add_coures_constraints(self, model):
         
+        # Constraint: Each student should attend exactly one group for each course
         for student in self.students:
-            for other in student.bonus:
-                for slot in student.slots:
-                    student_in_slot = [
-                        self.student_var_map[(student, course, slot)]
-                        for course in student.courses
-                    ]
-                    other_student_in_slot = [
-                        self.student_var_map[(other, other_course, slot)]
-                        for other_course in other.courses
+            for course in student.courses:
+                # Variables for each group selection
+                group_selection_vars = [
+                    model.NewBoolVar(f"group_selected_{student}_{course}_{group}")
+                    for group in course.groups
+                ]
+
+                # Select exactly one group for each student for each course
+                model.AddExactlyOne(group_selection_vars)
+
+                # Create a map for the group selection variables
+                group_var_map = {
+                    group: group_selection_vars[i]
+                    for i, group in enumerate(course.groups)
+                }
+
+                for group in course.groups:
+                    slot_vars = [
+                        self.student_var_map[(student, course, group, slot)]
+                        for slot in student.slots
+                        if (student, course, group, slot) in self.student_var_map
                     ]
 
-                    # If student attends a class in this slot, other_student must attend a class in this slot
-                    model.AddBoolOr([var.Not() for var in student_in_slot] + other_student_in_slot)
+                    # If the group is selected, then the slots should match the requirements
+                    if course.week_days:
+                        # For courses on weekdays, select exactly two slots
+                        model.Add(sum(slot_vars) == 2).OnlyEnforceIf(group_var_map[group])
+                    else:
+                        # For courses on weekends, select exactly one slot
+                        model.Add(sum(slot_vars) == 1).OnlyEnforceIf(group_var_map[group])
 
-                    # If other_student attends a class in this slot, student must attend a class in this slot
-                    model.AddBoolOr([var.Not() for var in other_student_in_slot] + student_in_slot)
+                    # If the group is not selected, no slots should be chosen
+                    model.Add(sum(slot_vars) == 0).OnlyEnforceIf(group_var_map[group].Not())
 
 
     def add_optimal_number_of_rooms(self, model):
 
-        rooms = self.course_var_map
+        rooms = self.groups_var_map
         rm_list = []
 
         for r,v in rooms.items():
             rm_list.append(v)
         print("added minimization process")
         model.Minimize(sum(rm_list)) 
-    
-    def add_optimal_number_of_students(self, model):
-        
-        def calculate_number_of_students():
-            slot_scores = {}
-            for course, room, slot in self.course_var_map.keys():
-                student_count = sum(
-                    1 for s in self.students if (s,course,slot) in self.student_var_map
-                )
-                slot_scores[(course,room, slot)] = student_count
-            return slot_scores
 
-        slot_scores = calculate_number_of_students()
-
-        slot_var = {
-            (course, room ,slot ): model.NewBoolVar(f'slot_{course}_{room}_{slot}') for  course, room ,slot in slot_scores
-        }
-
-        objective_terms = [
-            slot_scores[slot] * slot_var[slot]
-            for slot in slot_scores
-        ]
-
-        model.Maximize(sum(objective_terms))
 
     def exclude_current_solution(self,model,solver):
         literals = []
         for var in (
-            list(self.course_var_map.values()) +
+            list(self.groups_var_map.values()) +
             list(self.teacher_var_map.values()) +
             list(self.student_var_map.values())
         ):
@@ -322,7 +345,7 @@ class TimeTable:
     def print_solution(self, solution):
         
         for classroom in solution:
-            print(f"{classroom['course']}  : Room: {classroom['room']} : Time: {classroom['slot']}")
+            print(f"{classroom['course']}: {classroom['group']} : Room: {classroom['room']} : Time: {classroom['slot']}")
             print(f"Teacher : {classroom['teacher']}")
             for i,s in enumerate(classroom['students']):
                 print(f'{i} : {s}')
