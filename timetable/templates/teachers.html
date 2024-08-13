@@ -82,10 +82,42 @@
             </table>
 
             <div class="error" id="slots-error"></div>
-
+            
+            <input type="hidden" name="action" value="add_teacher">
             <button type="submit">Add Teacher</button>
-            <a href="/" class="back-button">Back to Home</a>
+
+
+
+
+
         </form>
+
+        <h3>Remove Teachers</h3>
+        <form action="{{ url_for('manage_teachers') }}" method="POST" onsubmit="return confirmRemoval()">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Remove</th>
+                        <th>Name</th>
+                        <th>Lastname</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for teacher in teachers %}
+                    <tr>
+                        <td><input type="checkbox" name="remove_teacher[]" value="{{ teacher }}"></td>
+                        <td>{{ teacher.name }}</td>
+                        <td>{{ teacher.lastname }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <input type="hidden" name="action" value="remove_teacher">
+            <button type="submit">Remove Selected Teachers</button>
+        </form>
+
+        <a href="/" class="back-button">Back to Home</a>
+
     </div>
     
     <script>
@@ -119,6 +151,16 @@
                 event.preventDefault(); // Prevent form submission
             }
         });
+
+        function confirmRemoval() {
+            const selected = document.querySelectorAll('input[name="remove_teacher[]"]:checked');
+            if (selected.length > 0) {
+                return confirm('Are you sure you want to remove the selected teachers?');
+            } else {
+                alert('Please select at least one teacher to remove.');
+                return false;
+            }
+        }
     </script>
 </body>
 </html>

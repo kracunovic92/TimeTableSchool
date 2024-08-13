@@ -4,11 +4,22 @@
     <meta charset="UTF-8">
     <title>Courses</title>
     <link rel="stylesheet" href="../static/styles.css">
+    <script>
+        function confirmRemoval() {
+            const selected = document.querySelectorAll('input[name="remove_courses[]"]:checked');
+            if (selected.length > 0) {
+                return confirm('Are you sure you want to remove the selected courses?');
+            } else {
+                alert('Please select at least one course to remove.');
+                return false;
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="container">
         <h1>Manage Courses</h1>
-        <form method="POST">
+        <form action="{{ url_for('manage_courses') }}" method="POST">
             <label for="course_id">Course ID:</label>
             <input type="text" id="course_id" name="course_id" required><br>
             <label for="language">Language:</label>
@@ -18,8 +29,34 @@
                 <option value="True"> Yes</option>
                 <option value="False"> No</option>
             </select><br><br>
+            <input type="hidden" name="action" value="add_course">
             <button type="submit">Add Course</button>
         </form>
+
+        <h3>Remove Courses</h3>
+            <form action="{{ url_for('manage_courses') }}" method="POST" onsubmit="return confirmRemoval()">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Remove</th>
+                            <th>ID</th>
+                            <th>Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in courses %}
+                        <tr>
+                            <td><input type="checkbox" name="remove_courses[]" value="{{ course }}"></td>
+                            <td>{{ course.id }}</td>
+                            <td>{{ course.language }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <input type="hidden" name="action" value="remove_course">
+                <button type="submit">Remove Selected Courses</button>
+            </form>
+
         <a href="/" class="back-button">Back to Home</a>
     </div>
 </body>

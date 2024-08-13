@@ -58,10 +58,34 @@
                     {% endfor %}
                 </tbody>
             </table>
-            
+            <input type="hidden" name="action" value="add_room">
             <button type="submit">Add Room</button>
-            <a href="/" class="back-button">Back to Home</a>
+
         </form>
+
+        <h3>Remove Classrooms</h3>
+            <form action="{{ url_for('manage_classrooms') }}" method="POST" onsubmit="return confirmRemoval()">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Remove</th>
+                            <th>ID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for room in rooms %}
+                        <tr>
+                            <td><input type="checkbox" name="remove_rooms[]" value="{{ room }}"></td>
+                            <td>{{ room.id }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <input type="hidden" name="action" value="remove_room">
+                <button type="submit">Remove Selected Rooms</button>
+            </form>
+
+        <a href="/" class="back-button">Back to Home</a>
     </div>
     
     <script>
@@ -71,6 +95,16 @@
                 
                 checkboxes.forEach(checkbox => checkbox.checked = !allChecked);
             });
+
+            function confirmRemoval() {
+                const selected = document.querySelectorAll('input[name="remove_rooms[]"]:checked');
+                if (selected.length > 0) {
+                    return confirm('Are you sure you want to remove the selected rooms?');
+                } else {
+                    alert('Please select at least one room to remove.');
+                    return false;
+                }
+            }
     </script>
 </body>
 </html>

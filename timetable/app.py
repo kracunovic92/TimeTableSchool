@@ -78,48 +78,75 @@ def manage_courses():
 
     if request.method == 'POST':
 
-        weekend = request.form.get('weekends')
-        print(f'Chosen option for wknd : {weekend}')
+        action = request.form.get('action')
+        if action == 'add_course':
 
-        course = Course(
-            id=request.form['course_id'],
-            language=request.form['language'],
-            week_days=True if weekend == "False" else False
-        )
-        
-        
-        data_courses.append(course)
-        save_data('courses')
+            weekend = request.form.get('weekends')
+
+            course = Course(
+                id=request.form['course_id'],
+                language=request.form['language'],
+                week_days=True if weekend == "False" else False
+            )
+            
+            
+            data_courses.append(course)
+            save_data('courses')
+
+        elif action == 'remove_course':
+            course_removal = request.form.getlist('remove_courses[]')
+
+            if course_removal:
+                for c in course_removal:
+                    language, id = c.split('_')
+                    data_courses[:] = [course for course in data_courses 
+                                if not (course.id == id and course.language == language)]
+
+            save_data('courses')
+
         #return redirect(url_for('index'))
-    return render_template('courses.html')
+    return render_template('courses.html', courses=data_courses)
 
 @app.route('/classrooms', methods=['GET', 'POST'])
 def manage_classrooms():
     load_data()
     if request.method == 'POST':
 
-        global available_slots
-        available_slots = []
+        action = request.form.get('action')
+        if action == 'add_room':
 
-        days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-        for day in days:
-            slots = request.form.getlist(f'availability[{day}][]')
-            for slot in slots:
-                start_time, end_time = slot.split('-')
-                start_hour = start_time.split(':')[0]
-                end_hour = end_time.split(':')[0]
+            global available_slots
+            available_slots = []
 
-                available_slots.append(Slot(str(day.lower()), start_hour, end_hour))
+            days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            for day in days:
+                slots = request.form.getlist(f'availability[{day}][]')
+                for slot in slots:
+                    start_time, end_time = slot.split('-')
+                    start_hour = start_time.split(':')[0]
+                    end_hour = end_time.split(':')[0]
 
-        classroom = Room(
-            room_id=request.form['name'],
-            available_slots = available_slots
-        )
+                    available_slots.append(Slot(str(day.lower()), start_hour, end_hour))
 
-        data_classrooms.append(classroom)
-        save_data('classrooms')
+            classroom = Room(
+                room_id=request.form['name'],
+                available_slots = available_slots
+            )
+
+            data_classrooms.append(classroom)
+            save_data('classrooms')
+
+        elif action == 'remove_room':
+            room_removal = request.form.getlist('remove_rooms[]')
+
+            if room_removal:
+                for r in room_removal:
+                    data_classrooms[:] = [room for room in data_classrooms 
+                                if not (room.id == r)]
+
+            save_data('classrooms')
         #return redirect(url_for('index'))
-    return render_template('classrooms.html')
+    return render_template('classrooms.html', rooms=data_classrooms)
     
 
 @app.route('/teachers', methods=['GET', 'POST'])
@@ -127,50 +154,67 @@ def manage_teachers():
     load_data()
     if request.method == 'POST':
 
-        name = request.form['name']
-        lastname = request.form['lastname']
-        courses=request.form.getlist('courses[]')
+        action = request.form.get('action')
 
-        selected_courses = []
-
-        for i in data_courses:
-            if str(i.id) in courses:
-                selected_courses.append(i)
-
-        slots_tmp = []
-
-        days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-        for day in days:
-            slots = request.form.getlist(f'availability[{day}][]')
-            for slot in slots:
-                start_time, end_time = slot.split('-')
-                start_hour = start_time.split(':')[0]
-                end_hour = end_time.split(':')[0]
-
-                slots_tmp.append(Slot(str(day.lower()), start_hour, end_hour))
+        if action == 'add_teacher':
 
 
-        teacher = Teacher(
-            name = name,
-            lastname = lastname,
-            courses=selected_courses,
-            available_slots=slots_tmp
-        )
+            name = request.form['name']
+            lastname = request.form['lastname']
+            courses=request.form.getlist('courses[]')
 
-        remove_idx = None
-        for t in data_teachers:
-            if t.name == teacher.name and t.lastname == teacher.lastname:
-                remove_idx = data_teachers.index(t)
-                break
-        
-        if remove_idx != None:
-            data_teachers.pop(remove_idx)
+            selected_courses = []
+
+            for i in data_courses:
+                if str(i.id) in courses:
+                    selected_courses.append(i)
+
+            slots_tmp = []
+
+            days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            for day in days:
+                slots = request.form.getlist(f'availability[{day}][]')
+                for slot in slots:
+                    start_time, end_time = slot.split('-')
+                    start_hour = start_time.split(':')[0]
+                    end_hour = end_time.split(':')[0]
+
+                    slots_tmp.append(Slot(str(day.lower()), start_hour, end_hour))
+
+
+            teacher = Teacher(
+                name = name,
+                lastname = lastname,
+                courses=selected_courses,
+                available_slots=slots_tmp
+            )
+
+            remove_idx = None
+            for t in data_teachers:
+                if t.name == teacher.name and t.lastname == teacher.lastname:
+                    remove_idx = data_teachers.index(t)
+                    break
+            
+            if remove_idx != None:
+                data_teachers.pop(remove_idx)
                 
-        data_teachers.append(teacher)
+            data_teachers.append(teacher)
 
-        save_data('teachers')
-        return redirect(url_for('index'))
-    return render_template('teachers.html', courses=data_courses)
+            save_data('teachers')
+
+        elif action == 'remove_teacher':
+
+            teacher_removal = request.form.getlist('remove_teacher[]')
+
+            if teacher_removal:
+                for t in teacher_removal:
+                    name, lastname = t.split(' ')
+                    data_teachers[:] = [teacher for teacher in data_teachers 
+                                if not (teacher.name == name and teacher.lastname == lastname)]
+
+            save_data('teachers')
+        # return redirect(url_for('index'))
+    return render_template('teachers.html', courses=data_courses, teachers = data_teachers)
 
 @app.route('/students', methods=['GET', 'POST'])
 def manage_students():
