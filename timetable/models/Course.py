@@ -3,7 +3,7 @@ from .Student import Student
 
 class Course:
 
-    def __init__(self,id, students = [], teacher = [], week_days = True, max_students = 4):
+    def __init__(self,id, students = [], teacher = [], week_days = True, groups = [], max_students = 4):
 
         self._id = id # Book / Lvl
         self._students = students
@@ -12,7 +12,7 @@ class Course:
         self._week_days = week_days
         self._groups = []
         self._max_students = max_students
-        self._courent_students = 0
+        self._current_students = 0
 
     def __eq__(self, other):
 
@@ -36,7 +36,8 @@ class Course:
             "teacher": self.teacher.to_dict() if self.teacher and not exclude_teacher  else None,
             "slots": [s.to_dict() for s in self.time_slot] if self.time_slot else None,
             "weekdays" : self.week_days,
-            "groups" : self.groups
+            "groups" : self.groups,
+            "max_students" : self.max_students
         }
     
     @classmethod
@@ -47,7 +48,7 @@ class Course:
         students = [Student.from_dict(student_data) for student_data in data['students']] if data['students'] else None
         teacher = Teacher.from_dict(data['teacher']) if data.get('teacher') else None
 
-        return cls(data['id'],students,teacher, data['weekdays'],data['groups'])
+        return cls(data['id'],students,teacher, data['weekdays'],data['groups'], data['max_students'])
     
     def to_json(self):
         return json.dumps(self.to_dict())
@@ -60,7 +61,10 @@ class Course:
         max_students = self.max_students
         tmp_students = self.current_students
 
-        br = tmp_students // max_students + 1
+        print(f'max students : {max_students}')
+        print(f'curr studs : {tmp_students}')
+
+        br = tmp_students // int(max_students) + 1
         self.groups = [i for i in range(1,br+1)]
         
     @property
@@ -102,7 +106,7 @@ class Course:
         self._max_students = max_stud
     @current_students.setter
     def current_students(self,curr_stud):
-        self._courent_students = curr_stud
+        self._current_students = curr_stud
     @groups.setter
     def groups(self, gp):
         self._groups = gp

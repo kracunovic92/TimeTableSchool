@@ -70,6 +70,7 @@ class TimeTable:
         self.teacher_var_map = teacher_var_map
     
     def add_base_course_constraints(self, model):
+
         # At most one course per room per slot
         for room in self.classrooms:
             for slot in room.slots:
@@ -82,7 +83,7 @@ class TimeTable:
             for group in course.groups:
 
                 weekend = [self.groups_var_map[(course,group, room, slot)] for room in self.classrooms for slot in room.slots if (slot.day  in ['saturday','sunday'] and (course,group,room,slot) in self.groups_var_map)]
-                weekdays = [self.course_var_map[(course, room, slot)]for room in self.classrooms for slot in room.slots if (slot.day not in ['saturday', 'sunday'] and (course,group,room,slot) in self.groups_var_map)]
+                weekdays = [self.groups_var_map[(course, group, room, slot)]for room in self.classrooms for slot in room.slots if (slot.day not in ['saturday', 'sunday'] and (course,group,room,slot) in self.groups_var_map)]
                 if   not course.week_day:
                     model.AddExactlyOne(weekend)
                     #model.Add(sum(weekend) == 1)
@@ -460,13 +461,15 @@ class TimeTable:
 
     def add_solution(self, solver):
         classes = []
-        for var, variable in self.course_var_map.items():
+        for var, variable in self.groups_var_map.items():
             if solver.Value(variable) == 1:
                 course = var[0]
-                room = var[1]
-                slot = var[2]
+                group = var[1]
+                room = var[2]
+                slot = var[3]
                 classroom = {
                     'course': course.to_dict(),
+                    'group' : group,
                     'room': room.to_dict(),
                     'slot': slot,
                     'teacher': None,
@@ -474,13 +477,15 @@ class TimeTable:
                 }
                 
                 # Find the teacher for this course and slot
+                # {teacher}_{course}_{group}_{slot}
                 for t, t2 in self.teacher_var_map.items():
-                    if solver.Value(t2) == 1 and slot == t[2] and course == t[1]:
+                    if solver.Value(t2) == 1 and slot == t[3] and course == t[1] and group == t[2]:
                         classroom['teacher'] = t[0].to_dict()
                 
                 # Find students for this course and slot
+                # {student}_{course}_{group}_{slot}
                 for s, s2 in self.student_var_map.items():
-                    if solver.Value(s2) == 1 and slot == s[2] and course == s[1]:
+                    if solver.Value(s2) == 1 and slot == s[3] and course == s[1] and group == s[2]:
                         classroom['students'].append(s[0].to_dict())
                 
                 classes.append(classroom)

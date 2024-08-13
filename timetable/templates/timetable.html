@@ -107,10 +107,11 @@
                                     {% for classroom in solution %}
                                         {% if classroom['slot'].start_time == slot and classroom['slot'].day == day %}
                                             <div class="slot">
-                                                <div class="slot-course">{{ classroom['course']['language'] }} ({{ classroom['course']['id'] }}) {{ classroom['slot'].start_time }} - {{ classroom['slot'].end_time }}</div>
+                                                <div class="slot-course"> ({{ classroom['course']['id'] }}) {{ classroom['slot'].start_time }} - {{ classroom['slot'].end_time }}</div>
                                                 <div class="slot-details">
                                                     Room: {{ classroom['room']['id'] }}<br>
                                                     Teacher: {{ classroom['teacher']['name'] if classroom['teacher'] else 'N/A' }}<br>
+                                                    Group : {{ classroom['group']}} <br>
                                                 </div>
                                                 <!-- Student List (Initially hidden) -->
                                                 <div class="student-list">

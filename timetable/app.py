@@ -82,10 +82,10 @@ def manage_courses():
         if action == 'add_course':
 
             weekend = request.form.get('weekends')
-
+            max_students = int(request.form.get('max_students'))
             course = Course(
                 id=request.form['course_id'],
-                language=request.form['language'],
+                max_students=max_students,
                 week_days=True if weekend == "False" else False
             )
             
@@ -228,10 +228,14 @@ def manage_students():
             name = request.form['name']
             lastname = request.form['lastname']
             courses=request.form.getlist('courses')
+
             bonus_constraints = request.form.getlist('other_students[]')
 
             selected_bonuses = [student for student in data_students if str(student) in bonus_constraints]
             selected_courses = [course for course in data_courses if str(course.id) in courses]
+
+            for s in selected_courses:
+                s.current_students += 1
 
             slots_tmp = []
 

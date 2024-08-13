@@ -22,8 +22,8 @@
         <form action="{{ url_for('manage_courses') }}" method="POST">
             <label for="course_id">Course ID:</label>
             <input type="text" id="course_id" name="course_id" required><br>
-            <label for="language">Language:</label>
-            <input type="text" id="language" name="language" required><br>
+            <label for="max_students">Maximum number of students per group:</label>
+            <input type="number" id="max_students" name="max_students" required><br>
             <label for="weeknd">Held on weekends?</label>
             <select name="weekends">
                 <option value="True"> Yes</option>
