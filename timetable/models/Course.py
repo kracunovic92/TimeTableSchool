@@ -3,21 +3,21 @@ from .Student import Student
 
 class Course:
 
-    def __init__(self,id, students = [], teacher = [], week_days = True, groups = [], max_students = 4):
+    def __init__(self,id, students = [], teacher = [], week_days = True, groups = [1], max_students = 4):
 
         self._id = id # Book / Lvl
         self._students = students
         self._teacher = teacher
         self._time_slot = None
         self._week_days = week_days
-        self._groups = []
+        self._groups = groups
         self._max_students = max_students
         self._current_students = 0
 
     def __eq__(self, other):
 
         if isinstance(other,Course):
-            if self.language == other.language and self.id == other.id:
+            if  self.id == other.id:
                 return True
         return False
     

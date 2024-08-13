@@ -26,6 +26,7 @@ def run_solver():
     rooms = load_from_json(path, 'classrooms.json', Room)
     courses = load_from_json(path, 'courses.json', Course)
 
+
     tt = TimeTable(students, teachers, rooms, courses)
 
     solutions = tt.find_all_solutions()

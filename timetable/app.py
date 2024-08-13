@@ -236,6 +236,7 @@ def manage_students():
 
             for s in selected_courses:
                 s.current_students += 1
+                s.calculate_groups()
 
             slots_tmp = []
 
