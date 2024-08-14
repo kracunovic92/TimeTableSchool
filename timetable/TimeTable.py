@@ -94,10 +94,25 @@ class TimeTable:
                         for room in self.classrooms
                         for slot in room.slots if (course,group,room,slot) in self.groups_var_map) >= 1
                 )
-
+        # for course in self.courses:
+        #     max_students = course.max_students
+        #     for group in course.groups:
+        #         # Collect all the student variables for this course, group, and any slot
+        #         student_vars = [
+        #             self.student_var_map[(student, course, group, slot)]
+        #             for student in self.students
+        #             for slot in student.slots
+        #             if (student, course, group, slot) in self.student_var_map
+        #         ]
+                
+        #         # Constraint: Number of students in the group should be <= max_students
+        #         model.Add(
+        #             sum(student_vars) <= max_students
+        #         )
                 
     def add_base_teacher_constraints(self,model):
-
+    
+        #max 1 course/group per slot 
         for teacher in self.teachers:
             for slot in teacher.slots:
                 model.Add(
@@ -105,25 +120,87 @@ class TimeTable:
                         for course in teacher.courses
                         for group in course.groups if (teacher,course,group,slot) in self.teacher_var_map) <= 1
                 )
-        
-        for teacher in self.teachers:
-            for course in teacher.courses:
-                for group in course.groups:
-                    for slot in teacher.slots:
-                        for room in self.classrooms:
+
+
+        for course in self.courses:
+            for group in course.groups:
+                for room in self.classrooms:
+                    for slot in room.slots:
+                        room_var = self.groups_var_map.get((course, group, room, slot), None)
+                        
+                        if room_var is not None:
+                            # Create an auxiliary variable to indicate if at least one teacher is available
+                            teacher_available = model.NewBoolVar(f'teacher_available_{course}_{group}_{room}_{slot}')
+                            
+                            # Imply that if the room is scheduled, then there must be a teacher available
+                            model.AddImplication(room_var, teacher_available)
+                            
+                            # Ensure at least one teacher is available if the room is scheduled
                             model.Add(
-                                self.teacher_var_map[(teacher, course, group, slot)] <= 
-                                self.groups_var_map[(course, group, room, slot)]
+                                teacher_available <= sum(
+                                    self.teacher_var_map.get((teacher, course, group, slot), 0)
+                                    for teacher in self.teachers
+                                )
                             )
+                            
+                            # If the room is scheduled, then at least one teacher must be assigned
+                            model.Add(
+                                sum(self.teacher_var_map.get((teacher, course, group, slot), 0)
+                                    for teacher in self.teachers) >= teacher_available
+                            ).OnlyEnforceIf(room_var)
+
+        # Room availability if a teacher is assigned
+        for room in self.classrooms:
+            for slot in room.slots:
+                for course in self.courses:
+                    for group in course.groups:
+                        room_var = self.groups_var_map.get((course, group, room, slot), None)
+                        for teacher in self.teachers:
+                            teacher_var = self.teacher_var_map.get((teacher, course, group, slot), None)
+                            if room_var is not None and teacher_var is not None:
+                                model.AddImplication(teacher_var, room_var)
+
+        # Teacher availability if a room is assigned
+        for course in self.courses:
+            for group in course.groups:
+                for slot in self.teachers[0].slots:  # Consider each slot individually
+                    for room in self.classrooms:
+                        room_var = self.groups_var_map.get((course, group, room, slot), None)
+                        for teacher in self.teachers:
+                            teacher_var = self.teacher_var_map.get((teacher, course, group, slot), None)
+                            if room_var is not None and teacher_var is not None:
+                                model.AddImplication(room_var, teacher_var)
+
+
 
     def add_base_student_constraints(self,model):
+
         for student in self.students:
             for course in student.courses:
+                # Constraint to ensure exactly one group for each course
                 model.Add(
-                    sum(self.student_var_map[(student, course, group, slot)]
+                    sum(
+                        self.student_var_map[(student, course, group, slot)]
                         for group in course.groups
-                        for slot in student.slots if (student,course,group,slot) in self.student_var_map) >= 1
+                        for slot in student.slots
+                        if (student, course, group, slot) in self.student_var_map
+                    ) == 1
                 )
+
+        for (course,group,room,slot) in self.groups_var_map.keys():
+
+            student_var = [self.student_var_map[(student,course,group,slot)] for student in self.students if(student,course,group,slot) in self.student_var_map]
+            model.Add(
+                self.groups_var_map[(course,group,room,slot)] <= cp_model.LinearExpr.Sum(student_var)
+            )
+        for (student,course,group,slot) in self.student_var_map.keys():
+
+            course_var = [self.groups_var_map[(course,group,room,slot)] for room in self.classrooms if (course,group,room,slot) in self.groups_var_map]
+            model.Add(
+                self.student_var_map[(student,course,group,slot)] <= cp_model.LinearExpr.Sum(course_var)
+            )
+
+
 
     def add_teacher_constraints(self, model):
         pass
@@ -245,18 +322,20 @@ class TimeTable:
             if solver.Value(variable) == 1:
                 course = var[0]
                 group = var[1]
-                slot = var[2]
+                room = var[2]
+                slot = var[3]
                 print(str(course) + "  " + str(slot))
 
                 for  t,t2  in self.teacher_var_map.items():
 
-                    if solver.Value(t2) == 1 and slot == t[2] and course == t[1]:
-                        print('\t'+str(t[0]))
+                    if solver.Value(t2) == 1 and t[3] == slot:
+                        print(t)
                 
                         for s,s2 in self.student_var_map.items():
-                            if solver.Value(s2) == 1 and slot == s[2] and course == s[1]:
-                                print('\t\t '+str(s[0]))
+                            if solver.Value(s2) == 1 and s[3] == slot:
+                                print(s)
                 print('---------------------------------')
+
             
 
                         
