@@ -1,0 +1,5 @@
+[
+    "{\"id\": \"Jack\", \"students\": null, \"teacher\": null, \"slots\": null, \"weekdays\": true, \"groups\": [1, 2], \"max_students\": 3, \"current_students\": 4}",
+    "{\"id\": \"Rainbow\", \"students\": null, \"teacher\": null, \"slots\": null, \"weekdays\": true, \"groups\": [1], \"max_students\": 3, \"current_students\": 0}",
+    "{\"id\": \"EngW\", \"students\": null, \"teacher\": null, \"slots\": null, \"weekdays\": true, \"groups\": [1], \"max_students\": 3, \"current_students\": 0}"
+]
