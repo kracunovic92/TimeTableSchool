@@ -3,7 +3,7 @@ from .Student import Student
 
 class Course:
 
-    def __init__(self,id, students = [], teacher = [], week_days = True, groups = [1], max_students = 4):
+    def __init__(self,id, students = [], teacher = [], week_days = True, groups = [1], max_students = 4, current_students = 0):
 
         self._id = id # Book / Lvl
         self._students = students
@@ -12,7 +12,7 @@ class Course:
         self._week_days = week_days
         self._groups = groups
         self._max_students = max_students
-        self._current_students = 0
+        self._current_students = current_students
 
     def __eq__(self, other):
 
@@ -37,7 +37,8 @@ class Course:
             "slots": [s.to_dict() for s in self.time_slot] if self.time_slot else None,
             "weekdays" : self.week_days,
             "groups" : self.groups,
-            "max_students" : self.max_students
+            "max_students" : self.max_students,
+            "current_students" : self.current_students
         }
     
     @classmethod
@@ -48,7 +49,7 @@ class Course:
         students = [Student.from_dict(student_data) for student_data in data['students']] if data['students'] else None
         teacher = Teacher.from_dict(data['teacher']) if data.get('teacher') else None
 
-        return cls(data['id'],students,teacher, data['weekdays'],data['groups'], data['max_students'])
+        return cls(data['id'],students,teacher, data['weekdays'],data['groups'], data['max_students'], data['current_students'])
     
     def to_json(self):
         return json.dumps(self.to_dict())
@@ -61,10 +62,10 @@ class Course:
         max_students = self.max_students
         tmp_students = self.current_students
 
-        print(f'max students : {max_students}')
-        print(f'curr studs : {tmp_students}')
-
-        br = tmp_students // int(max_students) + 1
+        br = tmp_students // int(max_students)
+        if tmp_students % int(max_students) != 0:
+            br += 1
+        
         self.groups = [i for i in range(1,br+1)]
         
     @property

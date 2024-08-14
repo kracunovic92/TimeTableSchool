@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 import json
 import os
 import sys
+import copy
 
 def resource_path(relative_path):
     if hasattr(sys, '_MEIPASS'):
@@ -70,6 +71,10 @@ def index():
 @app.route('/delete-json', methods=['POST'])
 def delete_json():
     delete_json_files(resource_path('data'))
+    data_classrooms.clear()
+    data_teachers.clear()
+    data_students.clear()
+    data_courses.clear()
     return redirect(url_for('index')) 
 
 @app.route('/courses', methods=['GET', 'POST'])
@@ -98,9 +103,8 @@ def manage_courses():
 
             if course_removal:
                 for c in course_removal:
-                    language, id = c.split('_')
                     data_courses[:] = [course for course in data_courses 
-                                if not (course.id == id and course.language == language)]
+                                if not (course.id == c)]
 
             save_data('courses')
 
@@ -237,6 +241,21 @@ def manage_students():
             for s in selected_courses:
                 s.current_students += 1
                 s.calculate_groups()
+                for student in data_students:
+                    for course in student.courses:
+                        if course.id == s.id:
+                            course.groups = s.groups
+                            course.current_students = s.current_students
+                    
+                save_data('courses')
+                if len(s.groups) > 1:
+                    for teacher in data_teachers:
+                        for course in teacher.courses:
+                            if course.id == s.id:
+                                course.groups = s.groups
+                                course.current_students = s.current_students
+
+                    save_data('teachers')
 
             slots_tmp = []
 
@@ -260,6 +279,8 @@ def manage_students():
 
 
             data_students.append(student)
+
+            
             save_data('students')
 
         elif action == 'remove_student':
