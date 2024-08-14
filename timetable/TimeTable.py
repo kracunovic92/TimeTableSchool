@@ -124,6 +124,21 @@ class TimeTable:
                             # Ensure that there is at least one teacher assigned if the course is scheduled
                             model.Add(sum(teacher_assignment_vars) > 0).OnlyEnforceIf(self.groups_var_map[(course, group, room, slot)])
 
+        # Ensure that at most one room is assigned for the same course, group, and slot
+        for course in self.courses:
+            for group in course.groups:
+                slot_to_room_assignments = {}
+
+                for room in self.classrooms:
+                    for slot in room.slots:
+                        if (course, group, room, slot) in self.groups_var_map:
+                            if slot not in slot_to_room_assignments:
+                                slot_to_room_assignments[slot] = []
+                            slot_to_room_assignments[slot].append(self.groups_var_map[(course, group, room, slot)])
+
+                
+                for slot, assignments in slot_to_room_assignments.items():
+                    model.Add(sum(assignments) <= 1)
 
     def add_base_student_constraints(self,model):
         pass
