@@ -19,10 +19,13 @@
             text-align: center;
         }
         .timetable {
-            display: flex;
+            display: none; /* Hide all solutions initially */
             flex-direction: column;
             align-items: center;
             margin: 20px 0;
+        }
+        .timetable.active { /* Only active solution is displayed */
+            display: flex;
         }
         .days {
             display: flex;
@@ -48,7 +51,7 @@
             margin: 5px 0;
             padding: 10px;
             border-radius: 4px;
-            position: relative; /* Added for positioning student list */
+            position: relative;
         }
         .slot-course {
             font-weight: bold;
@@ -57,7 +60,7 @@
             margin-top: 5px;
         }
         .slot .student-list {
-            display: none; /* Initially hidden */
+            display: none;
             background: #fff;
             padding: 10px;
             border-radius: 4px;
@@ -65,38 +68,36 @@
             position: absolute;
             z-index: 10;
         }
-        .slot:active .student-list { /* Show on click */
+        .slot:active .student-list {
             display: block;
         }
         .student-list.visible {
             display: block;
         }
+        .navigation-buttons {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .navigation-buttons button {
+            padding: 10px 20px;
+            margin: 0 5px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .navigation-buttons button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
     </style>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const slots = document.querySelectorAll('.slot');
-
-            slots.forEach(slot => {
-                slot.addEventListener('click', function(event) {
-                    event.stopPropagation(); // Prevent closing when clicking inside the slot
-                    this.querySelector('.student-list').classList.toggle('visible');
-                });
-            });
-
-            // Close student list when clicking outside
-            document.addEventListener('click', function(event) {
-                slots.forEach(slot => {
-                    slot.querySelector('.student-list').classList.remove('visible');
-                });
-            });
-        });
-    </script>
 </head>
 <body>
     <div class="container">
         <h1>Timetable Solutions</h1>
         {% for solution in solutions %}
-            <div class="timetable">
+            <div class="timetable {% if loop.index == 1 %}active{% endif %}">
                 <h2>Solution {{ loop.index }}</h2>
                 <div class="days">
                     {% for day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] %}
@@ -107,13 +108,12 @@
                                     {% for classroom in solution %}
                                         {% if classroom['slot'].start_time == slot and classroom['slot'].day == day %}
                                             <div class="slot">
-                                                <div class="slot-course"> ({{ classroom['course']['id'] }}) {{ classroom['slot'].start_time }} - {{ classroom['slot'].end_time }}</div>
+                                                <div class="slot-course">({{ classroom['course']['id'] }}) {{ classroom['slot'].start_time }} - {{ classroom['slot'].end_time }}</div>
                                                 <div class="slot-details">
                                                     Room: {{ classroom['room']['id'] }}<br>
                                                     Teacher: {{ classroom['teacher']['name'] if classroom['teacher'] else 'N/A' }}<br>
                                                     Group : {{ classroom['group']}} <br>
                                                 </div>
-                                                <!-- Student List (Initially hidden) -->
                                                 <div class="student-list">
                                                     <strong>Students:</strong><br>
                                                     {% for student in classroom['students'] %}
@@ -130,6 +130,56 @@
                 </div>
             </div>
         {% endfor %}
+        <div class="navigation-buttons">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const solutions = document.querySelectorAll('.timetable');
+            let currentIndex = 0;
+
+            function updateButtons() {
+                document.getElementById('prev-btn').disabled = currentIndex === 0;
+                document.getElementById('next-btn').disabled = currentIndex === solutions.length - 1;
+            }
+
+            function showSolution(index) {
+                solutions[currentIndex].classList.remove('active');
+                currentIndex = index;
+                solutions[currentIndex].classList.add('active');
+                updateButtons();
+            }
+
+            document.getElementById('prev-btn').addEventListener('click', function() {
+                if (currentIndex > 0) {
+                    showSolution(currentIndex - 1);
+                }
+            });
+
+            document.getElementById('next-btn').addEventListener('click', function() {
+                if (currentIndex < solutions.length - 1) {
+                    showSolution(currentIndex + 1);
+                }
+            });
+
+            const slots = document.querySelectorAll('.slot');
+
+            slots.forEach(slot => {
+                slot.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                    this.querySelector('.student-list').classList.toggle('visible');
+                });
+            });
+
+            document.addEventListener('click', function(event) {
+                slots.forEach(slot => {
+                    slot.querySelector('.student-list').classList.remove('visible');
+                });
+            });
+        });
+    </script>
 </body>
 </html>

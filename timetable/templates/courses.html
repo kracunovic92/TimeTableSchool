@@ -41,6 +41,7 @@
                             <th>Remove</th>
                             <th>Name</th>
                             <th>Weekend</th>
+                            <th>Max Students</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -54,6 +55,9 @@
                                 {% else %}
                                     Held on weekends
                                 {% endif %}
+                            </td>
+                            <td>
+                                {{course.max_students}}
                             </td>
                         </tr>
                         {% endfor %}

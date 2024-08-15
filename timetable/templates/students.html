@@ -17,15 +17,27 @@
         }
         select {
             width: 100%;
+            height: 100%;
             max-width: 200px;
+            max-height: 200px;
+            text-align: center;
+        }
+        /* Specific styling for the courses select box */
+        #courses {
+            height: auto; /* Automatically adjust height based on content */
+            max-width: 400px; /* Increase max-width for better display */
+        }
+        /* Center the text in each option */
+        #courses option {
+            text-align: center;
         }
     </style>
     <script>
         let selectAllState = false;
 
         function toggleCheckboxes() {
-            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-            checkboxes.forEach(checkbox => {
+            const availabilityCheckboxes = document.querySelectorAll('table.availability input[type="checkbox"]');
+            availabilityCheckboxes.forEach(checkbox => {
                 checkbox.checked = !selectAllState;
             });
             selectAllState = !selectAllState;
@@ -63,7 +75,7 @@
 
             <h3>Availability</h3>
             <button type="button" id="toggleButton" onclick="toggleCheckboxes()">Select All</button>
-            <table>
+            <table class="availability">
                 <thead>
                     <tr>
                         <th>Time Slot</th>
@@ -107,9 +119,6 @@
                 </tbody>
             </table>
 
-
-            
-
             <h3>Choose who should have class at the same time</h3>
             <label for="other_students">Select Students:</label>
             <select id="other_students" name="other_students[]" multiple>
@@ -117,7 +126,6 @@
                     <option value="{{student}}">{{ student.name }} {{ student.lastname }}</option>
                 {% endfor %}
             </select><br><br>
-            
 
             <input type="hidden" name="action" value="add_student">
             <button type="submit">Add Student</button>
@@ -125,29 +133,28 @@
         </form>
 
         <h3>Remove Students</h3>
-            <form action="{{ url_for('manage_students') }}" method="POST" onsubmit="return confirmRemoval()">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Remove</th>
-                            <th>Name</th>
-                            <th>Lastname</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for student in students %}
-                        <tr>
-                            <td><input type="checkbox" name="remove_students[]" value="{{ student }}"></td>
-                            <td>{{ student.name }}</td>
-                            <td>{{ student.lastname }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <input type="hidden" name="action" value="remove_student">
-                <button type="submit">Remove Selected Students</button>
-            </form>
-
+        <form action="{{ url_for('manage_students') }}" method="POST" onsubmit="return confirmRemoval()">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Remove</th>
+                        <th>Name</th>
+                        <th>Lastname</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td><input type="checkbox" name="remove_students[]" value="{{ student }}"></td>
+                        <td>{{ student.name }}</td>
+                        <td>{{ student.lastname }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <input type="hidden" name="action" value="remove_student">
+            <button type="submit">Remove Selected Students</button>
+        </form>
     </div>
 </body>
 </html>
