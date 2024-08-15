@@ -212,10 +212,9 @@ def manage_teachers():
 
             if teacher_removal:
                 for t in teacher_removal:
-                    name, lastname = t.split(' ')
+                    name, lastname = t.split()
                     data_teachers[:] = [teacher for teacher in data_teachers 
                                 if not (teacher.name == name and teacher.lastname == lastname)]
-
             save_data('teachers')
         # return redirect(url_for('index'))
     return render_template('teachers.html', courses=data_courses, teachers = data_teachers)
@@ -289,14 +288,19 @@ def manage_students():
 
             if students_removal:
                 for s in students_removal:
-                    name, lastname = s.split(' ')
+                    name, lastname = s.split()
                     data_students[:] = [student for student in data_students 
                                 if not (student.name == name and student.lastname == lastname)]
+
+                    for c in s.courses:
+                        c.current_students -= 1
+                        c.calculate_groups()
+                        save_data('courses')
+                        save_data('teachers')
 
             save_data('students')
                     
 
-        return redirect(url_for('index'))
     return render_template('students.html', courses=data_courses, students = data_students)
 
 @app.route('/view_timetable', methods=['GET', 'POST'])

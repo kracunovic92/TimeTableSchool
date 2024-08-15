@@ -39,8 +39,8 @@
                     <thead>
                         <tr>
                             <th>Remove</th>
-                            <th>ID</th>
                             <th>Name</th>
+                            <th>Weekend</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -48,7 +48,13 @@
                         <tr>
                             <td><input type="checkbox" name="remove_courses[]" value="{{ course }}"></td>
                             <td>{{ course.id }}</td>
-                            <td>{{ course.language }}</td>
+                            <td>
+                                {% if course.week_days %}
+                                    Held on weekdays
+                                {% else %}
+                                    Held on weekends
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
