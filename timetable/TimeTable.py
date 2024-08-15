@@ -204,24 +204,40 @@ class TimeTable:
 
     def add_coures_constraints(self, model):
 
-
+        print("BONUSSESESE")
         for student in self.students:
             for other in student.bonus:
+                print(f"{student} :: {other}")
                 for slot in student.slots:
                     student_in_slot = [
-                        self.student_var_map[(student, course, slot)]
-                        for course in student.courses
+                        self.student_var_map[(student, course,group, slot)]
+                        for course in student.courses for group in course.groups if (student,course,group,slot) in self.student_var_map 
                     ]
                     other_student_in_slot = [
-                        self.student_var_map[(other, other_course, slot)]
-                        for other_course in other.courses
+                        self.student_var_map[(other, other_course,group, slot)]
+                        for other_course in other.courses for group in other_course.groups if (other,other_course,group,slot) in self.student_var_map
                     ]
 
-                    # If student attends a class in this slot, other_student must attend a class in this slot
-                    model.AddBoolOr([var.Not() for var in student_in_slot] + other_student_in_slot)
+                    for s in student_in_slot:
+                        model.Add(sum(other_student_in_slot) >= 1).OnlyEnforceIf(s)
+                    
+                for  slot in other.slots:
+                    student_in_slot = [
+                        self.student_var_map[(student, course,group, slot)]
+                        for course in student.courses for group in course.groups if (student,course,group,slot) in self.student_var_map 
+                    ]
+                    other_student_in_slot = [
+                        self.student_var_map[(other, other_course,group, slot)]
+                        for other_course in other.courses for group in other_course.groups if (other,other_course,group,slot) in self.student_var_map
+                    ]
+                    for s in other_student_in_slot:
+                        model.Add(sum(student_in_slot) >= 1).OnlyEnforceIf(s)
 
-                    # If other_student attends a class in this slot, student must attend a class in this slot
-                    model.AddBoolOr([var.Not() for var in other_student_in_slot] + student_in_slot)
+                    # # If student attends a class in this slot, other_student must attend a class in this slot
+                    #model.AddBoolOr([var.Not() for var in student_in_slot] + other_student_in_slot)
+                
+                    # # If other_student attends a class in this slot, student must attend a class in this slot
+                    #model.AddBoolOr([var.Not() for var in other_student_in_slot] + student_in_slot)
 
     def add_optimal_number_of_rooms(self, model):
 
@@ -274,13 +290,13 @@ class TimeTable:
                 self.exclude_current_solution(model,solver)
                 status = solver.Solve(model)
                 self.add_solution(solver)
-                self.print_classes(solver)
+                #self.print_classes(solver)
 
         return self.solutions
     
     def add_other_constraints(self,model,solver):
         constraints = []
-        #constraints.append(self.add_coures_constraints)
+        constraints.append(self.add_coures_constraints)
         constraints.append(self.add_teacher_constraints)
         for i, const_function in enumerate(constraints):
             print(f"New CONSTRAINT {i}")
@@ -318,7 +334,7 @@ class TimeTable:
             const_function(model)
             status = solver.Solve(model)
             if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-                self.print_classes(solver)
+                #self.print_classes(solver)
                 print("Basic constraints added")
             else:
                 print("Some misstake with basic constraints")
@@ -341,7 +357,7 @@ class TimeTable:
 
         for i,sol in enumerate(solutions):
             print(f"SOLUTION {i}:")
-            self.print_solution(sol)
+            #self.print_solution(sol)
 
     def print_classes(self, solver):
 
