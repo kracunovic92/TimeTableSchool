@@ -89,7 +89,7 @@ def manage_courses():
             weekend = request.form.get('weekends')
             max_students = int(request.form.get('max_students'))
             course = Course(
-                id=request.form['course_id'],
+                id=request.form['course_id'].strip(),
                 max_students=max_students,
                 week_days=True if weekend == "False" else False
             )
@@ -133,7 +133,7 @@ def manage_classrooms():
                     available_slots.append(Slot(str(day.lower()), start_hour, end_hour))
 
             classroom = Room(
-                room_id=request.form['name'],
+                room_id=request.form['name'].strip(),
                 available_slots = available_slots
             )
 
@@ -187,8 +187,8 @@ def manage_teachers():
 
 
             teacher = Teacher(
-                name = name,
-                lastname = lastname,
+                name = name.strip(),
+                lastname = lastname.strip(),
                 courses=selected_courses,
                 available_slots=slots_tmp
             )
@@ -269,8 +269,8 @@ def manage_students():
                     slots_tmp.append(Slot(str(day.lower()), start_hour, end_hour))
 
             student = Student(
-                name=name,
-                lastname=lastname,
+                name=name.strip(),
+                lastname=lastname.strip(),
                 courses=selected_courses,
                 available_slots=slots_tmp,
                 constraints = selected_bonuses
@@ -289,14 +289,23 @@ def manage_students():
             if students_removal:
                 for s in students_removal:
                     name, lastname = s.split()
-                    data_students[:] = [student for student in data_students 
-                                if not (student.name == name and student.lastname == lastname)]
-
-                    for c in s.courses:
-                        c.current_students -= 1
-                        c.calculate_groups()
-                        save_data('courses')
-                        save_data('teachers')
+                    print(f'{name} {lastname}')
+                    
+                    student_to_remove = next((student for student in data_students 
+                                            if student.name.strip() == name and student.lastname.strip() == lastname), None)
+                    
+                    if student_to_remove:
+                        for sc in student_to_remove.courses:
+                            for c in data_courses:
+                                if c.id == sc.id:
+                                    c.current_students -= 1
+                                    c.calculate_groups()
+                            
+                                    save_data('courses')
+                                    save_data('teachers')
+                        
+                        data_students[:] = [student for student in data_students 
+                                            if student != student_to_remove]
 
             save_data('students')
                     
